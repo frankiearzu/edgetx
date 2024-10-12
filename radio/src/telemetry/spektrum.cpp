@@ -189,13 +189,15 @@ const SpektrumSensor spektrumSensors[] = {
 //SS(I2C_GMETER,      12,  int16,     STR_SENSOR_MIN_ACCZ ?,        UNIT_G,         2), // min G Z-axis        WING SPAR LOAD
 
   // 0x15,  JETCAT/TURBINE, BCD Encoded values
-  // TODO: Add decoding of status information
-//SS(I2C_JETCAT,       0,  uint8,     STR_SENSOR_STATUS,            UNIT_BITFIELD,  0),
-  SS(I2C_JETCAT,       1,  uint8bcd,  STR_SENSOR_THROTTLE,          UNIT_PERCENT,   0),
-  SS(I2C_JETCAT,       2,  uint16bcd, STR_SENSOR_A1,                UNIT_VOLTS,     2),
-  SS(I2C_JETCAT,       4,  uint16bcd, STR_SENSOR_A2,                UNIT_VOLTS,     2),
-  SS(I2C_JETCAT,       6,  uint32bcd, STR_SENSOR_RPM,               UNIT_RPMS,      0),
-  SS(I2C_JETCAT,      10,  uint16bcd, STR_SENSOR_TEMP1,             UNIT_CELSIUS,   0),
+  // NOTE: The ECU status are sent as TEMP4
+  SS(I2C_JETCAT,       0,  uint8,     STR_SENSOR_TEMP4,             UNIT_RAW,       0), // Status
+  SS(I2C_JETCAT,       1,  uint8bcd,  STR_SENSOR_THROTTLE,          UNIT_PERCENT,   0), // (BCD) xx Percent
+  SS(I2C_JETCAT,       2,  uint16bcd, STR_SENSOR_A3,                UNIT_VOLTS,     2), // (BCD) xx.yy  packVoltage
+  SS(I2C_JETCAT,       4,  uint16bcd, STR_SENSOR_A4,                UNIT_VOLTS,     2), // (BCD) xx.yy  pumpVoltage
+  SS(I2C_JETCAT,       6,  uint32bcd, STR_SENSOR_RPM,               UNIT_RPMS,      0), // (BCD) 
+  SS(I2C_JETCAT,      10,  uint16bcd, STR_SENSOR_TEMP3,             UNIT_CELSIUS,   0), // (BCD) EGT Temperature, Celsius
+  SS(I2C_JETCAT,      12,  uint8,     STR_SENSOR_TEMP4,             UNIT_RAW,       0), // offStatus
+
 
   // 0x16  GPS LOG
   SS(I2C_GPS_LOC,      0,  uint16bcd,  STR_SENSOR_GPSALT,           UNIT_METERS,    1), // Atl-Low BCD 3.1
@@ -217,7 +219,6 @@ const SpektrumSensor spektrumSensors[] = {
   SS(I2C_RX_BATT,     10,  uint16,    STR_SENSOR_BATT1_VOLTAGE,     UNIT_VOLTS,     2), // Volts, 0.01V increments (0-16.00V)
 
   // 0x19 Jetcat flow rate
-//SS(I2C_JETCAT_2,     0,  uint16bcd, STR_SENSOR_FUEL_CONSUMPTION,  UNIT_MILLILITERS_PER_MINUTE, 1), missing ml/min
   SS(I2C_JETCAT_2,     2,  uint32bcd, STR_SENSOR_FUEL,              UNIT_MILLILITERS, 1),
 
   // 0x1a Gyro
@@ -355,14 +356,14 @@ const SpektrumSensor spektrumSensors[] = {
   SS(I2C_PSEUDO_TX,    4,  uint32,    STR_SENSOR_BIND,              UNIT_RAW,       0),
   SS(I2C_PSEUDO_TX,    8,  uint32,    STR_SENSOR_FLIGHT_MODE,       UNIT_TEXT,      0),
   SS(I2C_PSEUDO_TX,    10, uint32,    STR_SENSOR_CELLS,             UNIT_CELLS,     2),
-  SS(0,                0,  int16,     NULL,                         UNIT_RAW,       0) //sentinel
+  SS(0,                0,  int16,     NULL,                   UNIT_RAW,             0) //sentinel
 };
-// clang-format on
 
 // Alt Low and High needs to be combined (in 2 diff packets)
 static uint8_t gpsAltHigh = 0;
-static bool varioTelemetry = false;
-static bool flightPackTelemetry = false;
+static uint8_t jetCatOffStatus = 0;
+static bool varioTelemetry = false;  // Receiving Vario Sensor Telemetry ?
+static bool flightPackTelemetry = false; // Receiving Flight Pack Telemetry ?
 
 // Helper function declared later
 static void processAS3XPacket(const uint8_t *packet);
@@ -387,7 +388,7 @@ static int32_t bcdToInt16(uint16_t bcd)
 
 static int32_t bcdToInt32(uint32_t bcd)
 {
-  return bcdToInt16(bcd >> 16) + 10000 * bcdToInt16(bcd);
+  return bcdToInt16(bcd >> 16) * 10000 + bcdToInt16(bcd);
 }
 
 // Spektrum uses Big Endian data types
@@ -553,6 +554,7 @@ void processSpektrumPacket(const uint8_t *packet)
 
   if (telemetryState == TELEMETRY_INIT) {  // Telemetry Reset?
     gpsAltHigh = 0;
+    jetCatOffStatus = 0;
     varioTelemetry = false;
     flightPackTelemetry = false;
   }
@@ -646,6 +648,7 @@ void processSpektrumPacket(const uint8_t *packet)
       return; // not a sensor... this is to cleanup many auto-generated 27XX sensors
      }
   } // I2C_REMOTE_ID
+
 
 
   bool handled = false;
@@ -803,7 +806,19 @@ void processSpektrumPacket(const uint8_t *packet)
     else if (i2cAddress == I2C_ALTITUDE && varioTelemetry) {
       // Altitude already reported in vario
       continue; 
-    }
+    } // I2C_ALTITUDE
+
+    else if (i2cAddress == I2C_JETCAT) {
+      if (sensor->startByte == 0) {   // STATUS
+          if (value == 0) { // Use the OFF_Status instead, but negative
+              value = (int8_t) -jetCatOffStatus;
+          }
+      }
+      else if (sensor->startByte == 12) {   // OFF_STATUS
+          jetCatOffStatus = value; // Save it to combine it with the Status
+          continue;
+      }
+    } // I2C_JETCAT
 
     setTelemetryValue(PROTOCOL_TELEMETRY_SPEKTRUM, pseudoId, 0, instance, value, sensor->unit, sensor->precision);
   } // FOR
@@ -1156,6 +1171,13 @@ static char test27data_16[] = {0x27, 0x16, 0x97, 0x00, 0x54, 0x71, 0x12, 0x28,
 static char test27data_17[] = {0x27, 0x17, 0x25, 0x00, 0x00,
                             0x28, 0x18, 0x21, 0x06, 0x00};
 
+// JetCat (BCD)
+// Example 0x15:          0    1    2  3   4  5    6  7  8  9    10 11   12
+//                15 00 | 00 | 51 | 50 05 |25 06 | 56 34 12 00 | 50 12 |  3
+//                Status:0, Power%: 51,  PackV = 05.50, PumpV=06.25, RPM = 00123456, EGT = 1250, OffStatus = 3
+static char test15data[] = {0x15, 0x00, 0x00, 0x51, 0x50, 0x05, 0x25, 0x06, 
+                            0x56, 0x34, 0x12, 0x00, 0x50, 0x12, 0x03 };
+
 static uint8_t replaceForTestingPackage(const uint8_t *packet)
 {
   uint8_t i2cAddress = packet[2] & 0x7f;
@@ -1202,9 +1224,12 @@ static uint8_t replaceForTestingPackage(const uint8_t *packet)
     case 4: // Return LIPO monitor
         if (!real0x3A) memcpy((char *)packet + 2, test3Adata, 16);
         break;
+    case 5: // JetCat 
+        memcpy((char *)packet + 2, test15data, 15);
+        break;
   }
 
-  testStep = (testStep + 1) % 5;
+  testStep = (testStep + 1) % 6;
   
 
   return packet[2] & 0x7f;
