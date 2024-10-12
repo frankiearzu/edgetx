@@ -219,6 +219,7 @@ const SpektrumSensor spektrumSensors[] = {
   SS(I2C_RX_BATT,     10,  uint16,    STR_SENSOR_BATT1_VOLTAGE,     UNIT_VOLTS,     2), // Volts, 0.01V increments (0-16.00V)
 
   // 0x19 Jetcat flow rate
+//SS(I2C_JETCAT_2,     0,  uint16bcd, STR_SENSOR_FUEL_CONSUMPTION,  UNIT_MILLILITERS_PER_MINUTE, 1), missing ml/min
   SS(I2C_JETCAT_2,     2,  uint32bcd, STR_SENSOR_FUEL,              UNIT_MILLILITERS, 1),
 
   // 0x1a Gyro
@@ -358,6 +359,7 @@ const SpektrumSensor spektrumSensors[] = {
   SS(I2C_PSEUDO_TX,    10, uint32,    STR_SENSOR_CELLS,             UNIT_CELLS,     2),
   SS(0,                0,  int16,     NULL,                   UNIT_RAW,             0) //sentinel
 };
+// clang-format on
 
 // Alt Low and High needs to be combined (in 2 diff packets)
 static uint8_t gpsAltHigh = 0;
