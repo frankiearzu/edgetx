@@ -357,7 +357,7 @@ const SpektrumSensor spektrumSensors[] = {
   SS(I2C_PSEUDO_TX,    4,  uint32,    STR_SENSOR_BIND,              UNIT_RAW,       0),
   SS(I2C_PSEUDO_TX,    8,  uint32,    STR_SENSOR_FLIGHT_MODE,       UNIT_TEXT,      0),
   SS(I2C_PSEUDO_TX,    10, uint32,    STR_SENSOR_CELLS,             UNIT_CELLS,     2),
-  SS(0,                0,  int16,     NULL,                   UNIT_RAW,             0) //sentinel
+  SS(0,                0,  int16,     NULL,                         UNIT_RAW,             0) //sentinel
 };
 // clang-format on
 
