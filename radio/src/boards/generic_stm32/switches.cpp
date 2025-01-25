@@ -20,6 +20,7 @@
  */
 
 #include "hal/switch_driver.h"
+#include "bsp_io.h"
 #include "stm32_switch_driver.h"
 #include "stm32_gpio_driver.h"
 
@@ -31,22 +32,26 @@
 
 #include <stdlib.h>
 
-void boardInitSwitches()
+__weak void boardInitSwitches()
 {
   _init_switches();
 }
 
-SwitchHwPos boardSwitchGetPosition(uint8_t cat, uint8_t idx)
+__weak SwitchHwPos boardSwitchGetPosition(SwitchCategory cat, uint8_t idx)
 {
-  return stm32_switch_get_position(&_switch_offsets[cat][idx]);
+  const stm32_switch_t* sw = &_switch_offsets[cat][idx];
+  if(sw->type != SWITCH_HW_ADC && sw->GPIOx_high == nullptr)
+    return bsp_get_switch_position(sw, cat, idx);
+
+  return stm32_switch_get_position(sw);
 }
 
-const char* boardSwitchGetName(uint8_t cat, uint8_t idx)
+__weak const char* boardSwitchGetName(SwitchCategory cat, uint8_t idx)
 {
   return _switch_offsets[cat][idx].name;
 }
 
-SwitchHwType boardSwitchGetType(uint8_t cat, uint8_t idx)
+__weak SwitchHwType boardSwitchGetType(SwitchCategory cat, uint8_t idx)
 {
   return _switch_offsets[cat][idx].type;
 }

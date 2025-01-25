@@ -30,6 +30,7 @@
 #endif
 
 #include "model_audio.h"
+#include "hal/audio_driver.h"
 
 extern RTOS_MUTEX_HANDLE audioMutex;
 
@@ -212,6 +213,17 @@ void referenceSystemAudioFiles()
 
   sdAvailableSystemAudioFiles.reset();
 
+#if defined(SIMU)
+  // f_readdir does an f_stat call on every file when running in the simulator
+  // so it is faster to just call f_stat on the files we are interested in
+  for (int i=0; i<AU_SPECIAL_SOUND_FIRST; i++) {
+    getSystemAudioFile(path, i);
+    if (f_stat(path, nullptr) == FR_OK)
+      sdAvailableSystemAudioFiles.setBit(i);
+  }
+#else
+  // On the radio f_readdir on the whole SYSTEM folder is faster than
+  // calling f_stat for each audio file name
   char * filename = strAppendSystemAudioPath(path);
   *(filename-1) = '\0';
 
@@ -226,8 +238,9 @@ void referenceSystemAudioFiles()
       if (len < 5 || strcasecmp(fno.fname+len-4, SOUNDS_EXT) || (fno.fattrib & AM_DIR)) continue;
 
       for (int i=0; i<AU_SPECIAL_SOUND_FIRST; i++) {
-        getSystemAudioFile(path, i);
-        if (!strcasecmp(filename, fno.fname)) {
+        strcpy(path, audioFilenames[i]);
+        strcat(path, SOUNDS_EXT);
+        if (!strcasecmp(path, fno.fname)) {
           sdAvailableSystemAudioFiles.setBit(i);
           break;
         }
@@ -235,6 +248,7 @@ void referenceSystemAudioFiles()
     }
     f_closedir(&dir);
   }
+#endif
 }
 
 void referenceModelAudioFiles()
@@ -366,8 +380,6 @@ void audioTask(void * pdata)
     RTOS_WAIT_TICKS(1);
   }
 
-  setSampleRate(AUDIO_SAMPLE_RATE);
-
 #if defined(PCBX12S) || defined(RADIO_TX16S) || defined(RADIO_F16) || defined(RADIO_V16)
   // The audio amp needs ~2s to start
   RTOS_WAIT_MS(1000); // 1s
@@ -378,18 +390,35 @@ void audioTask(void * pdata)
     DEBUG_TIMER_START(debugTimerAudioDuration);
     audioQueue.wakeup();
     DEBUG_TIMER_STOP(debugTimerAudioDuration);
-    RTOS_WAIT_MS(4);
+    RTOS_WAIT_MS(4); // ???
   }
 }
 #endif
 
-inline void mixSample(audio_data_t * result, int sample, unsigned int fade)
+#if !defined(__SSAT)
+  #define _sat_s16(x) ((int16_t)limit<int32_t>(INT16_MIN, (x), INT16_MAX))
+#else
+  #define _sat_s16(x) __SSAT((x), 16)
+#endif
+
+#if !defined(__USAT)
+  #define _sat_u16(x) ((uint16_t)limit<uint32_t>(UINT16_MIN, (x), UINT16_MAX))
+#else
+  #define _sat_u16(x) __USAT((x), 16)
+#endif
+
+inline void mixSample(audio_data_t * result, int16_t sample, unsigned int fade)
 {
-  *result = limit(AUDIO_DATA_MIN, *result + ((sample >> fade) >> (16-AUDIO_BITS_PER_SAMPLE)), AUDIO_DATA_MAX);
+  int32_t tmp = (int32_t)*result + ((int32_t)sample >> fade);
+#if AUDIO_SAMPLE_FMT == AUDIO_SAMPLE_FMT_S16
+  *result = (audio_data_t)_sat_s16(tmp);
+#elif AUDIO_SAMPLE_FMT == AUDIO_SAMPLE_FMT_U16
+  *result = (audio_data_t)_sat_u16((uint32_t)tmp);
+#endif 
 }
 
 #define RIFF_CHUNK_SIZE 12
-uint8_t wavBuffer[AUDIO_BUFFER_SIZE*2] __DMA;
+uint8_t wavBuffer[AUDIO_BUFFER_SIZE * 2] __DMA;
 
 int WavContext::mixBuffer(AudioBuffer *buffer, int volume, unsigned int fade)
 {
@@ -642,19 +671,20 @@ void AudioQueue::wakeup()
 #if defined(SOFTWARE_VOLUME)
       if (currentSpeakerVolume > 0) {
         for (uint32_t i=0; i<buffer->size; ++i) {
-          int32_t tmpSample = (int32_t) ((uint32_t) (buffer->data[i]) - AUDIO_DATA_SILENCE);  // conversion from uint16_t
-          buffer->data[i] = (int16_t) (((tmpSample * currentSpeakerVolume) / VOLUME_LEVEL_MAX) + AUDIO_DATA_SILENCE);
+          int32_t tmpSample =
+              (int32_t)((uint32_t)(buffer->data[i]) - AUDIO_DATA_SILENCE);
+          buffer->data[i] = (int16_t)(((tmpSample * currentSpeakerVolume) /
+                                       VOLUME_LEVEL_MAX) +
+                                      AUDIO_DATA_SILENCE);
         }
         buffersFifo.audioPushBuffer();
-      }
-      else {
+      } else {
         break;
       }
 #else
       buffersFifo.audioPushBuffer();
 #endif
-    }
-    else {
+    } else {
       // break the endless loop
       break;
     }

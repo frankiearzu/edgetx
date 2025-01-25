@@ -27,7 +27,7 @@
 const etx_hal_adc_driver_t* _hal_adc_driver = nullptr;
 const etx_hal_adc_inputs_t* _hal_adc_inputs = nullptr;
 
-static uint16_t adcValues[MAX_ANALOG_INPUTS] __DMA;
+static uint16_t adcValues[MAX_ANALOG_INPUTS] __DMA_NO_CACHE;
 
 #if defined(CSD203_SENSOR)
   extern uint16_t getCSD203BatteryVoltage(void);
@@ -35,6 +35,9 @@ static uint16_t adcValues[MAX_ANALOG_INPUTS] __DMA;
 
 bool adcInit(const etx_hal_adc_driver_t* driver)
 {
+  // Init buffer, provides non random values before mixer task starts
+  memset(adcValues, 0, sizeof(adcValues));
+
   // If there is an init function, it MUST succeed
   if (driver && (!driver->init || driver->init())) {
     _hal_adc_driver = driver;
@@ -64,7 +67,7 @@ static bool adcSingleRead()
 bool adcRead()
 {
   adcSingleRead();
-  
+
   // TODO: this hack needs to go away...
   if (isVBatBridgeEnabled()) {
     disableVBatBridge();
@@ -314,7 +317,10 @@ uint16_t getBatteryVoltage()
   int32_t instant_vbat = anaIn(adcGetInputOffset(ADC_INPUT_VBAT));
 
   // TODO: remove BATT_SCALE / BATTERY_DIVIDER defines
-#if defined(BATT_SCALE)
+#if defined(VBAT_MOSFET_DROP)
+  // 1000 is used as multiplier for both numerator and denominator to allow to stay in integer domain
+  return (uint16_t)((instant_vbat * ADC_VREF_PREC2 * ((((1000 + g_eeGeneral.txVoltageCalibration)) * (VBAT_DIV_R2 + VBAT_DIV_R1)) / VBAT_DIV_R1)) / (2*RESX*1000)) + VBAT_MOSFET_DROP;
+#elif defined(BATT_SCALE)
   instant_vbat =
       (instant_vbat * BATT_SCALE * (128 + g_eeGeneral.txVoltageCalibration)) /
       BATTERY_DIVIDER;

@@ -40,7 +40,7 @@
 #define LABELS_LENGTH 100 // Maximum length of the label string
 #define LABEL_LENGTH 16
 
-#if defined(COLORLCD) || defined(STM32H747xx)
+#if defined(COLORLCD)
   #define MAX_MODELS                   60
   #define MAX_OUTPUT_CHANNELS          32 // number of real output channels CH1-CH32
   #define MAX_FLIGHT_MODES             9
@@ -189,6 +189,13 @@ enum ModuleIndex {
   SPORT_MODULE = MAX_MODULES
 };
 
+enum ArmingMode {
+  ARMING_MODE_FIRST = 0,
+  ARMING_MODE_CH5 = ARMING_MODE_FIRST,
+  ARMING_MODE_SWITCH = 1,
+  ARMING_MODE_LAST = ARMING_MODE_SWITCH,
+};
+
 enum TrainerMode {
   TRAINER_MODE_OFF,
   TRAINER_MODE_MASTER_TRAINER_JACK,
@@ -199,10 +206,11 @@ enum TrainerMode {
   TRAINER_MODE_MASTER_BLUETOOTH,
   TRAINER_MODE_SLAVE_BLUETOOTH,
   TRAINER_MODE_MULTI,
+  TRAINER_MODE_CRSF,
 };
 
 #define TRAINER_MODE_MIN() TRAINER_MODE_OFF
-#define TRAINER_MODE_MAX() TRAINER_MODE_MULTI
+#define TRAINER_MODE_MAX() TRAINER_MODE_CRSF
 
 enum SerialPort {
     SP_AUX1=0,
@@ -681,8 +689,8 @@ enum Functions {
   FUNC_RACING_MODE,
 #if defined(COLORLCD) || defined(CFN_ONLY)
   FUNC_DISABLE_TOUCH,
-  FUNC_SET_SCREEN,
 #endif
+  FUNC_SET_SCREEN,
   FUNC_DISABLE_AUDIO_AMP,
   FUNC_RGB_LED,
 #if defined(VIDEO_SWITCH) || defined(CFN_ONLY)

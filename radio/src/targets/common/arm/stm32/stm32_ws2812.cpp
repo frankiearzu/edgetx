@@ -88,9 +88,9 @@ uint8_t pulse_inc = 1;
 // DMA buffer contains pulses for 2 LED at a time
 // (allows for refill at HT and TC)
 #if defined(STM32_SUPPORT_32BIT_TIMERS)
-static led_timer_value_t _led_dma_buffer[WS2821_DMA_BUFFER_LEN * 2] __DMA;
+static led_timer_value_t _led_dma_buffer[WS2821_DMA_BUFFER_LEN * 2] __DMA_NO_CACHE;
 #else
-static led_timer_value_t _led_dma_buffer[WS2821_DMA_BUFFER_LEN] __DMA;
+static led_timer_value_t _led_dma_buffer[WS2821_DMA_BUFFER_LEN] __DMA_NO_CACHE;
 #endif
 
 static uint8_t _led_seq_cnt;
@@ -194,7 +194,7 @@ static void _init_timer(const stm32_pulse_timer_t* tim)
   LL_DMA_SetMode(tim->DMAx, tim->DMA_Stream, LL_DMA_MODE_CIRCULAR);
   LL_DMA_SetDataLength(tim->DMAx, tim->DMA_Stream, WS2821_DMA_BUFFER_LEN);
   LL_DMA_SetMemoryAddress(tim->DMAx, tim->DMA_Stream, (uint32_t)_led_dma_buffer);
-  
+
   // we need to use a higher prio to avoid having
   // issues with some other things used during boot
   NVIC_SetPriority(tim->DMA_IRQn, WS2812_DMA_IRQ_PRIO);
@@ -229,6 +229,22 @@ void ws2812_set_color(uint8_t led, uint8_t r, uint8_t g, uint8_t b)
   pixel[_r_offset] = r;
   pixel[_g_offset] = g;
   pixel[_b_offset] = b;
+}
+
+uint32_t ws2812_get_color(uint8_t led)
+{
+  if (led >= _led_strip_len) return 0;
+
+  uint8_t* pixel = &_led_colors[led * WS2812_BYTES_PER_LED];
+  return  (pixel[1] << 16) +  (pixel[0] << 8) + pixel[2];
+}
+
+bool ws2812_get_state(uint8_t led)
+{
+  if (led >= _led_strip_len) return false;
+
+  uint8_t* pixel = &_led_colors[led * WS2812_BYTES_PER_LED];
+  return pixel[0] || pixel[1] || pixel[2];
 }
 
 void ws2812_update(const stm32_pulse_timer_t* tim)

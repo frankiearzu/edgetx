@@ -54,6 +54,9 @@ Functions cfn_sorted[] = {
 #endif
   /* 设置 */ FUNC_SET_TIMER,
   /* 设置失控保护 */ FUNC_SET_FAILSAFE,
+#if !defined(COLORLCD)
+  /* 设置主屏 */ FUNC_SET_SCREEN,
+#endif
   /* 锁定通道值 */ FUNC_OVERRIDE_CHANNEL,
   /* 修改全局变量GV值 */ FUNC_ADJUST_GVAR,
 #if defined(COLORLCD)
@@ -91,6 +94,9 @@ Functions cfn_sorted[] = {
   /* ModuleBind */ FUNC_BIND,
   /* Nastav */ FUNC_ADJUST_GVAR,
   /* Nastavit Failsafe */ FUNC_SET_FAILSAFE,
+#if !defined(COLORLCD)
+  /* Nast obrazovku */ FUNC_SET_SCREEN,
+#endif
 #if !defined(OLED_SCREEN)
   /* Podsvětlení */ FUNC_BACKLIGHT,
 #endif
@@ -156,6 +162,9 @@ Functions cfn_sorted[] = {
   /* Træner */ FUNC_TRAINER,
   /* Vario */ FUNC_VARIO,
   /* Vibration */ FUNC_HAPTIC,
+#if !defined(COLORLCD)
+  /* Vis skærm */ FUNC_SET_SCREEN,
+#endif
 #if defined(COLORLCD)
   /* Vælg hoved skærm */ FUNC_SET_SCREEN,
 #endif
@@ -199,12 +208,18 @@ Functions cfn_sorted[] = {
   /* Spiel Töne */ FUNC_PLAY_SOUND,
   /* StartMusik */ FUNC_BACKGND_MUSIC,
   /* Stop Musik */ FUNC_BACKGND_MUSIC_PAUSE,
+#if !defined(COLORLCD)
+  /* TelSeite anz */ FUNC_SET_SCREEN,
+#endif
 #if defined(DEBUG)
   /* Test */ FUNC_TEST,
 #endif
   /* Überschreibe */ FUNC_OVERRIDE_CHANNEL,
   /* Vario */ FUNC_VARIO,
 #elif defined(TRANSLATIONS_ES)
+#if !defined(COLORLCD)
+  /* Ajus. pantalla */ FUNC_SET_SCREEN,
+#endif
   /* Ajuste */ FUNC_SET_TIMER,
   /* Ajuste */ FUNC_ADJUST_GVAR,
   /* Audio Amp Off */ FUNC_DISABLE_AUDIO_AMP,
@@ -288,6 +303,9 @@ Functions cfn_sorted[] = {
 #if defined(COLORLCD)
   /* Set Main Screen */ FUNC_SET_SCREEN,
 #endif
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
+#endif
 #if defined(DEBUG)
   /* Test */ FUNC_TEST,
 #endif
@@ -295,6 +313,9 @@ Functions cfn_sorted[] = {
   /* Vario */ FUNC_VARIO,
   /* Volume */ FUNC_VOLUME,
 #elif defined(TRANSLATIONS_FR)
+#if !defined(COLORLCD)
+  /* Aff. écran */ FUNC_SET_SCREEN,
+#endif
   /* Ajuster */ FUNC_ADJUST_GVAR,
   /* Bind */ FUNC_BIND,
   /* Déf. */ FUNC_SET_TIMER,
@@ -367,6 +388,9 @@ Functions cfn_sorted[] = {
   /* SD Logs */ FUNC_LOGS,
   /* Set */ FUNC_SET_TIMER,
   /* SetFailsafe */ FUNC_SET_FAILSAFE,
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
+#endif
 #if defined(DEBUG)
   /* Test */ FUNC_TEST,
 #endif
@@ -418,6 +442,9 @@ Functions cfn_sorted[] = {
   /* Script Lua */ FUNC_PLAY_SCRIPT,
   /* Set */ FUNC_SET_TIMER,
   /* SetFailsafe */ FUNC_SET_FAILSAFE,
+#if !defined(COLORLCD)
+  /* Setta Schermo */ FUNC_SET_SCREEN,
+#endif
 #if defined(COLORLCD)
   /* Setta Schermo Princ. */ FUNC_SET_SCREEN,
 #endif
@@ -465,6 +492,9 @@ Functions cfn_sorted[] = {
   /* レンジチェック */ FUNC_RANGECHECK,
   /* 音源再生 */ FUNC_PLAY_TRACK,
   /* 画面キャプチャ */ FUNC_SCREENSHOT,
+#if !defined(COLORLCD)
+  /* 画面設定 */ FUNC_SET_SCREEN,
+#endif
 #if defined(OLED_SCREEN)
   /* 輝度 */ FUNC_BACKLIGHT,
 #endif
@@ -511,6 +541,9 @@ Functions cfn_sorted[] = {
   /* SetFailsafe */ FUNC_SET_FAILSAFE,
 #if defined(COLORLCD)
   /* Set Main Screen */ FUNC_SET_SCREEN,
+#endif
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
 #endif
 #if defined(DEBUG)
   /* Test */ FUNC_TEST,
@@ -560,6 +593,9 @@ Functions cfn_sorted[] = {
   /* Trener */ FUNC_TRAINER,
   /* Ustaw */ FUNC_ADJUST_GVAR,
   /* Ustaw */ FUNC_SET_TIMER,
+#if !defined(COLORLCD)
+  /* Ustaw ekran */ FUNC_SET_SCREEN,
+#endif
   /* Wario */ FUNC_VARIO,
   /* Wibracje */ FUNC_HAPTIC,
   /* Wycisz wzmacniacz audio */ FUNC_DISABLE_AUDIO_AMP,
@@ -576,6 +612,9 @@ Functions cfn_sorted[] = {
   /* Capt. Tela */ FUNC_SCREENSHOT,
   /* DefFailsafe */ FUNC_SET_FAILSAFE,
   /* Definir */ FUNC_SET_TIMER,
+#if !defined(COLORLCD)
+  /* Def Tela */ FUNC_SET_SCREEN,
+#endif
 #if defined(COLORLCD)
   /* Def Tela Princ */ FUNC_SET_SCREEN,
 #endif
@@ -621,6 +660,9 @@ Functions cfn_sorted[] = {
 #endif
   /* RGB подсветка */ FUNC_RGB_LED,
   /* SD логи */ FUNC_LOGS,
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
+#endif
   /* Авар управ */ FUNC_SET_FAILSAFE,
   /* Варио */ FUNC_VARIO,
   /* Вибро */ FUNC_HAPTIC,
@@ -697,6 +739,9 @@ Functions cfn_sorted[] = {
 #endif
   /* Tävlingsläge */ FUNC_RACING_MODE,
   /* Vario */ FUNC_VARIO,
+#if !defined(COLORLCD)
+  /* Visa skärm */ FUNC_SET_SCREEN,
+#endif
   /* Volym */ FUNC_VOLUME,
   /* Återställ */ FUNC_RESET,
 #elif defined(TRANSLATIONS_TW)
@@ -736,6 +781,9 @@ Functions cfn_sorted[] = {
 #endif
   /* 記錄日誌到SD卡 */ FUNC_LOGS,
   /* 設置 */ FUNC_SET_TIMER,
+#if !defined(COLORLCD)
+  /* 設置主屏 */ FUNC_SET_SCREEN,
+#endif
   /* 設置失控保護 */ FUNC_SET_FAILSAFE,
 #if defined(COLORLCD)
   /* 選擇主屏 */ FUNC_SET_SCREEN,
@@ -789,6 +837,9 @@ Functions cfn_sorted[] = {
 #endif
   /* RGB leds */ FUNC_RGB_LED,
   /* SD лог */ FUNC_LOGS,
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
+#endif
 #else
   /* Adjust */ FUNC_ADJUST_GVAR,
   /* Audio Amp Off */ FUNC_DISABLE_AUDIO_AMP,
@@ -827,6 +878,9 @@ Functions cfn_sorted[] = {
   /* SetFailsafe */ FUNC_SET_FAILSAFE,
 #if defined(COLORLCD)
   /* Set Main Screen */ FUNC_SET_SCREEN,
+#endif
+#if !defined(COLORLCD)
+  /* Set Screen */ FUNC_SET_SCREEN,
 #endif
 #if defined(DEBUG)
   /* Test */ FUNC_TEST,

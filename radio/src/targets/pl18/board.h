@@ -29,6 +29,10 @@
 #include "hal/serial_port.h"
 #include "hal/watchdog_driver.h"
 
+#if defined(ADC_GPIO_PIN_STICK_TH)
+#define SURFACE_RADIO  true
+#endif
+
 #define FLASHSIZE                       0x200000
 #define FLASH_PAGESIZE                  256
 #define BOOTLOADER_SIZE                 0x20000
@@ -61,8 +65,14 @@ extern "C" void SDRAM_Init();
 // Pulses driver
 #if !defined(SIMU)
 
-#define INTERNAL_MODULE_ON()            gpio_set(INTMODULE_PWR_GPIO)
-#define INTERNAL_MODULE_OFF()           gpio_clear(INTMODULE_PWR_GPIO);
+#if defined(RADIO_NB4P)
+  #define INTERNAL_MODULE_ON()            gpio_clear(INTMODULE_PWR_GPIO)
+  #define INTERNAL_MODULE_OFF()           gpio_set(INTMODULE_PWR_GPIO);
+#else
+  #define INTERNAL_MODULE_ON()            gpio_set(INTMODULE_PWR_GPIO)
+  #define INTERNAL_MODULE_OFF()           gpio_clear(INTMODULE_PWR_GPIO);
+#endif
+
 #define EXTERNAL_MODULE_ON()            gpio_set(EXTMODULE_PWR_GPIO)
 #define EXTERNAL_MODULE_OFF()           gpio_clear(EXTMODULE_PWR_GPIO)
 #define EXTERNAL_MODULE_PWR_OFF         EXTERNAL_MODULE_OFF
@@ -94,7 +104,12 @@ extern "C" void SDRAM_Init();
 #define BATTERY_WARN                  37 // 3.7V
 #define BATTERY_MIN                   35 // 3.4V
 #define BATTERY_MAX                   43 // 4.3V
-#define BATTERY_DIVIDER               962
+
+#if defined(RADIO_NB4P)
+  #define BATTERY_DIVIDER               3102 // = 2047 * (10k / 10k + 10k) * 10 / 3.3V
+#else
+  #define BATTERY_DIVIDER               962  // = 2047 * (22k / 120k + 22k) * 10 / 3.3V
+#endif
 
 #if defined(__cplusplus) && !defined(SIMU)
 extern "C" {
@@ -175,38 +190,6 @@ bool isBacklightEnabled();
 
 // Audio driver
 void audioInit();
-void audioConsumeCurrentBuffer();
-void audioSpiWriteBuffer(const uint8_t * buffer, uint32_t size);
-void audioSpiSetSpeed(uint8_t speed);
-uint8_t audioHardReset();
-uint8_t audioSoftReset();
-void audioSendRiffHeader();
-void audioOn();
-void audioOff();
-bool isAudioReady();
-bool audioChipReset();
-
-#define SPI_SPEED_2                    0
-#define SPI_SPEED_4                    1
-#define SPI_SPEED_8                    2
-#define SPI_SPEED_16                   3
-#define SPI_SPEED_32                   4
-#define SPI_SPEED_64                   5
-#define SPI_SPEED_128                  6
-#define SPI_SPEED_256                  7
-
-#define audioDisableIrq()             // interrupts must stay enabled on Horus
-#define audioEnableIrq()              // interrupts must stay enabled on Horus
-#if defined(PCBNV14)
-#define setSampleRate(freq)
-#else
-void setSampleRate(uint32_t frequency);
-#endif
-void setScaledVolume(uint8_t volume);
-void setVolume(uint8_t volume);
-int32_t getVolume();
-#define VOLUME_LEVEL_MAX               23
-#define VOLUME_LEVEL_DEF               12
 
 // Telemetry driver
 #define INTMODULE_FIFO_SIZE            512

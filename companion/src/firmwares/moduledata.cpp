@@ -258,7 +258,13 @@ QString ModuleData::subTypeToString(int type) const
 
   static const QString ppmSubTypeStrings[PPM_NUM_SUBTYPES] = {
     tr("No Telemetry"),
-    tr("MLink")
+    tr("MLink"),
+    tr("SPort")
+  };
+
+  static const QString sbusSubTypeStrings[SBUS_NUM_SUBTYPES] = {
+    tr("No Telemetry"),
+    tr("SPort")
   };
 
   if (type < 0)
@@ -269,6 +275,8 @@ QString ModuleData::subTypeToString(int type) const
       return Multiprotocols::subTypeToString((int)multi.rfProtocol, (unsigned)type);
     case PULSES_PPM:
       return CHECK_IN_ARRAY(ppmSubTypeStrings, type);
+    case PULSES_SBUS:
+      return CHECK_IN_ARRAY(sbusSubTypeStrings, type);
     case PULSES_PXX_R9M:
       return CHECK_IN_ARRAY(strings, type);
     default:
@@ -765,6 +773,38 @@ AbstractStaticItemModel * ModuleData::afhds3EmiItemModel()
 
   for (int i = 0; i < afhds3EmiList.size(); i++) {
     mdl->appendToItemList(afhds3EmiList.at(i), i + 1); // Note: 1 based
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+QString ModuleData::crsfArmingModeToString() const
+{
+  return crsfArmingModeToString(crsf.crsfArmingMode);
+}
+
+// static
+QString ModuleData::crsfArmingModeToString(int mode)
+{
+  switch (mode) {
+    case CRSF_ARMING_MODE_CH5:
+      return tr("CH5");
+    case CRSF_ARMING_MODE_SWITCH:
+      return tr("Switch");
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+// static
+AbstractStaticItemModel * ModuleData::crsfArmingModeItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_MODULE_CRSFARMINGMODE);
+
+  for (int i = 0; i < CRSF_ARMING_MODE_COUNT; i++) {
+    mdl->appendToItemList(crsfArmingModeToString(i), i);
   }
 
   mdl->loadItemList();

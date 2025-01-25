@@ -6,6 +6,7 @@
         ["Flysky NV14", "nv14-"],
         ["Flysky PL18", "pl18-"],
         ["Flysky PL18EV", "pl18ev-"],
+        ["Flysky NB4+", "nb4p-"],
         ["FrSky Horus X10", "x10-"],
         ["FrSky Horus X10 Express", "x10express-"],
         ["FrSky Horus X12s", "x12s-"],
@@ -24,6 +25,7 @@
         ["HelloRadioSky V14", "v14-"],
         ["HelloRadioSky V16", "v16-"],
         ["iFlight Commando 8", "commando8-"],
+        ["Jumper Bumblebee", "bumblebee-"],
         ["Jumper T12", "t12-"],
         ["Jumper T12 MAX", "t12max-"],
         ["Jumper T14", "t14-"],
@@ -43,7 +45,8 @@
         ["RadioMaster TX12", "tx12-"],
         ["RadioMaster TX12MK2", "tx12mk2-"],
         ["RadioMaster TX16S", "tx16s-"],
-        ["RadioMaster Zorro","zorro-"]
+        ["RadioMaster Zorro","zorro-"],
+        ["RadioMaster GX12", "gx12-"]
     ],
     "changelog": "- Major initial bug fixes"
 }

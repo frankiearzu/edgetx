@@ -32,6 +32,7 @@
 
 #include "hal/switch_driver.h"
 #include "hal/adc_driver.h"
+#include "hal/audio_driver.h"
 
 //
 // WARNING:
@@ -1329,6 +1330,7 @@ static const struct YamlIdStr enum_TrainerMode[] = {
   {  TRAINER_MODE_MASTER_BLUETOOTH, "MASTER_BT"  },
   {  TRAINER_MODE_SLAVE_BLUETOOTH, "SLAVE_BT"  },
   {  TRAINER_MODE_MULTI, "MASTER_MULTI"  },
+  {  TRAINER_MODE_CRSF, "MASTER_CRSF"  },
   {  0, NULL  }
 };
 
@@ -1619,9 +1621,7 @@ static void r_customFn(void* user, uint8_t* data, uint32_t bitoffs,
     }
     break;
 
-#if defined(COLORLCD)
   case FUNC_SET_SCREEN:
-#endif  
   case FUNC_HAPTIC:
   case FUNC_LOGS: // 10th of seconds
     CFN_PARAM(cfn) = yaml_str2uint(val, l_sep);
@@ -1726,7 +1726,7 @@ static void r_customFn(void* user, uint8_t* data, uint32_t bitoffs,
   }
 
   if (HAS_REPEAT_PARAM(func)) {
-    if (func == FUNC_PLAY_SCRIPT) {
+    if (func == FUNC_PLAY_SCRIPT || func == FUNC_RGB_LED) {
       if (val_len == 2 && val[0] == '1' && val[1] == 'x')
         CFN_PLAY_REPEAT(cfn) = 1;
       else
@@ -1837,9 +1837,7 @@ static bool w_customFn(void* user, uint8_t* data, uint32_t bitoffs,
     break;
 #endif
 
-#if defined(COLORLCD)
   case FUNC_SET_SCREEN:
-#endif
   case FUNC_HAPTIC:
   case FUNC_LOGS: // 10th of seconds
     str = yaml_unsigned2str(CFN_PARAM(cfn));
@@ -1891,7 +1889,7 @@ static bool w_customFn(void* user, uint8_t* data, uint32_t bitoffs,
     // ","
     if (!wf(opaque,",",1)) return false;
 
-    if (func == FUNC_PLAY_SCRIPT) {
+    if (func == FUNC_PLAY_SCRIPT || func == FUNC_RGB_LED) {
       if (!wf(opaque,(CFN_PLAY_REPEAT(cfn) == 0) ? "On" : "1x",2)) return false;
     } else if (CFN_PLAY_REPEAT(cfn) == 0) {
       // "1x"
@@ -2260,14 +2258,12 @@ static void r_carryTrim(void* user, uint8_t* data, uint32_t bitoffs,
   yaml_put_bits(data, i, bitoffs, 6);
 }
 
-#if defined(ROTARY_ENCODER_NAVIGATION) && !defined(USE_HATS_AS_KEYS)
 static void r_rotEncDirection(void* user, uint8_t* data, uint32_t bitoffs,
                            const char* val, uint8_t val_len)
 {
   uint32_t i = yaml_str2uint(val, val_len);
   yaml_put_bits(data, i, bitoffs, 2);
 }
-#endif
 
 static void r_telemetryBaudrate(void* user, uint8_t* data, uint32_t bitoffs,
                                 const char* val, uint8_t val_len)

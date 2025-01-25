@@ -361,12 +361,10 @@
 // ADC
 #if defined(PCBX12S)
   #define ADC_SPI                       SPI4
-  #define ADC_SPI_GPIO                  GPIOE
-  #define ADC_SPI_GPIO_AF               LL_GPIO_AF_5
-  #define ADC_SPI_GPIO_PIN_SCK          LL_GPIO_PIN_2 // PE.02
-  #define ADC_SPI_GPIO_PIN_CS           LL_GPIO_PIN_4 // PE.04
-  #define ADC_SPI_GPIO_PIN_MOSI         LL_GPIO_PIN_6 // PE.06
-  #define ADC_SPI_GPIO_PIN_MISO         LL_GPIO_PIN_5 // PE.05
+  #define ADC_SPI_GPIO_PIN_SCK          GPIO_PIN(GPIOE, 2) // PE.02
+  #define ADC_SPI_GPIO_PIN_CS           GPIO_PIN(GPIOE, 4) // PE.04
+  #define ADC_SPI_GPIO_PIN_MOSI         GPIO_PIN(GPIOE, 6) // PE.06
+  #define ADC_SPI_GPIO_PIN_MISO         GPIO_PIN(GPIOE, 5) // PE.05
 
   #define ADC_SPI_STICK_LH              0
   #define ADC_SPI_STICK_LV              1
@@ -565,7 +563,7 @@
 #elif defined(RADIO_TX16S) || defined(RADIO_F16)
   #define ADC_DIRECTION                 {1,-1,1,-1,  1,1,1,   -1,1,1,1,  -1,1 }
 #elif defined(RADIO_V16)
-  #define ADC_DIRECTION                 {1,-1,1,-1,  1,1,1,   -1,1,1,1,  -1,1 }
+  #define ADC_DIRECTION                 {1,-1,1,-1,  -1,1,-1,   -1,1,1,1,  -1,1 }
 #elif defined(PCBX10)
   #define ADC_DIRECTION                 {1,-1,1,-1,  -1,1,-1,  1,-1,1,1,   1,-1 }
 #elif defined(PCBX12S)
@@ -609,6 +607,8 @@
 #if defined(RADIO_T15)
   #define PCBREV_GPIO                   GPIO_PIN(GPIOH, 8) // PH.08
   #define PCBREV_VALUE()                (gpio_read(PCBREV_GPIO) >> 8)
+#elif defined(RADIO_V16)
+    #define PCBREV_VALUE()  {0}
 #elif defined(PCBX10)
   #define PCBREV_GPIO_1                 GPIO_PIN(GPIOH, 7) // PH.07
   #define PCBREV_GPIO_2                 GPIO_PIN(GPIOH, 8) // PH.08
@@ -834,12 +834,11 @@
 // SPI NOR Flash 
 #if defined(PCBX12S) && PCBREV >= 13
   #define FLASH_SPI                      SPI1
-  #define FLASH_SPI_CS_GPIO              GPIOA
-  #define FLASH_SPI_CS_GPIO_PIN          LL_GPIO_PIN_15 // PA.15
+  #define FLASH_SPI_CS_GPIO              GPIO_PIN(GPIOA, 15) // PA.15
   #define FLASH_SPI_GPIO                 GPIOA
-  #define FLASH_SPI_SCK_GPIO_PIN         LL_GPIO_PIN_5  // PA.05
-  #define FLASH_SPI_MISO_GPIO_PIN        LL_GPIO_PIN_6  // PA.06
-  #define FLASH_SPI_MOSI_GPIO_PIN        LL_GPIO_PIN_7  // PA.07
+  #define FLASH_SPI_SCK_GPIO             GPIO_PIN(GPIOA, 5) // PA.05
+  #define FLASH_SPI_MISO_GPIO            GPIO_PIN(GPIOA, 6) // PA.06
+  #define FLASH_SPI_MOSI_GPIO            GPIO_PIN(GPIOA, 7) // PA.07
   #define FLASH_SPI_DMA                  DMA2
   #define FLASH_SPI_DMA_CHANNEL          LL_DMA_CHANNEL_3
   #define FLASH_SPI_DMA_TX_STREAM        LL_DMA_STREAM_3
@@ -860,12 +859,11 @@
   // #define FLASH_SPI_RX_DMA_FLAG_TC       DMA_IT_TCIF5
 #elif defined(PCBX10)
   #define FLASH_SPI                      SPI2
-  #define FLASH_SPI_CS_GPIO              GPIOI
-  #define FLASH_SPI_CS_GPIO_PIN          LL_GPIO_PIN_0  // PI.00
+  #define FLASH_SPI_CS_GPIO              GPIO_PIN(GPIOI, 0)  // PI.00
   #define FLASH_SPI_GPIO                 GPIOI
-  #define FLASH_SPI_SCK_GPIO_PIN         LL_GPIO_PIN_1  // PI.01
-  #define FLASH_SPI_MISO_GPIO_PIN        LL_GPIO_PIN_2  // PI.02
-  #define FLASH_SPI_MOSI_GPIO_PIN        LL_GPIO_PIN_3  // PI.03
+  #define FLASH_SPI_SCK_GPIO             GPIO_PIN(GPIOI, 1)  // PI.01
+  #define FLASH_SPI_MISO_GPIO            GPIO_PIN(GPIOI, 2)  // PI.02
+  #define FLASH_SPI_MOSI_GPIO            GPIO_PIN(GPIOI, 3)  // PI.03
   #define FLASH_SPI_DMA                  DMA1
   #define FLASH_SPI_DMA_CHANNEL          LL_DMA_CHANNEL_0
   #define FLASH_SPI_DMA_TX_STREAM        LL_DMA_STREAM_4
@@ -886,23 +884,15 @@
 
 // Audio
 #if defined(PCBX12S)
-  #define AUDIO_SHUTDOWN_GPIO           GPIO_PIN(GPIOI, 9)  // PI.09
-  #define AUDIO_XDCS_GPIO               GPIOI
-  #define AUDIO_XDCS_GPIO_PIN           LL_GPIO_PIN_0  // PI.00
-  #define AUDIO_CS_GPIO                 GPIOH
-  #define AUDIO_CS_GPIO_PIN             LL_GPIO_PIN_13 // PH.13
-  #define AUDIO_DREQ_GPIO               GPIOH
-  #define AUDIO_DREQ_GPIO_PIN           LL_GPIO_PIN_14 // PH.14
-  #define AUDIO_RST_GPIO                GPIOH
-  #define AUDIO_RST_GPIO_PIN            LL_GPIO_PIN_15 // PH.15
+  #define AUDIO_SHUTDOWN_GPIO           GPIO_PIN(GPIOI, 9)   // PI.09
+  #define AUDIO_XDCS_GPIO               GPIO_PIN(GPIOI, 0)   // PI.00
+  #define AUDIO_CS_GPIO                 GPIO_PIN(GPIOH, 13)  // PH.13
+  #define AUDIO_DREQ_GPIO               GPIO_PIN(GPIOH, 14)  // PH.14
+  #define AUDIO_RST_GPIO                GPIO_PIN(GPIOH, 15)  // PH.15
   #define AUDIO_SPI                     SPI2
-  #define AUDIO_SPI_GPIO_AF             LL_GPIO_AF_5
-  #define AUDIO_SPI_SCK_GPIO            GPIOI
-  #define AUDIO_SPI_SCK_GPIO_PIN        LL_GPIO_PIN_1  // PI.01
-  #define AUDIO_SPI_MISO_GPIO           GPIOI
-  #define AUDIO_SPI_MISO_GPIO_PIN       LL_GPIO_PIN_2  // PI.02
-  #define AUDIO_SPI_MOSI_GPIO           GPIOI
-  #define AUDIO_SPI_MOSI_GPIO_PIN       LL_GPIO_PIN_3  // PI.03
+  #define AUDIO_SPI_SCK_GPIO            GPIO_PIN(GPIOI, 1)  // PI.01
+  #define AUDIO_SPI_MISO_GPIO           GPIO_PIN(GPIOI, 2)  // PI.02
+  #define AUDIO_SPI_MOSI_GPIO           GPIO_PIN(GPIOI, 3)  // PI.03
 #elif defined (PCBX10)
   #define AUDIO_MUTE_GPIO               GPIO_PIN(GPIOA, 7) // PA.07
   #define AUDIO_OUTPUT_GPIO             GPIO_PIN(GPIOA, 4) // PA.04
@@ -1126,18 +1116,14 @@
 #endif
 
 // Heartbeat
-#define INTMODULE_HEARTBEAT
-#if defined(RADIO_V16)
-  #define INTMODULE_HEARTBEAT_GPIO                GPIO_PIN(GPIOB, 11) // PB.11 / TIM2_CH4
-  #define INTMODULE_HEARTBEAT_EXTI_PORT           LL_SYSCFG_EXTI_PORTB
-  #define INTMODULE_HEARTBEAT_EXTI_SYS_LINE       LL_SYSCFG_EXTI_LINE11
-  #define INTMODULE_HEARTBEAT_EXTI_LINE           LL_EXTI_LINE_11
-#else
+#if !defined(RADIO_V16)
+  #define INTMODULE_HEARTBEAT
   #define INTMODULE_HEARTBEAT_GPIO                GPIO_PIN(GPIOD, 12) // PD.12 / TIM4_CH1
   #define INTMODULE_HEARTBEAT_EXTI_PORT           LL_SYSCFG_EXTI_PORTH
   #define INTMODULE_HEARTBEAT_EXTI_SYS_LINE       LL_SYSCFG_EXTI_LINE12
   #define INTMODULE_HEARTBEAT_EXTI_LINE           LL_EXTI_LINE_12
 #endif
+
 // INTMODULE_HEARTBEAT_EXTI IRQ
 #if !defined(USE_EXTI15_10_IRQ)
   #define USE_EXTI15_10_IRQ
@@ -1168,13 +1154,15 @@
 #define TRAINER_TIMER_FREQ              (PERI1_FREQUENCY * TIMER_MULT_APB1)
 
 // Trainer CPPM input on heartbeat pin
-#define TRAINER_MODULE_CPPM_TIMER            TIM4
-#define TRAINER_MODULE_CPPM_FREQ             (PERI1_FREQUENCY * TIMER_MULT_APB1)
-#define TRAINER_MODULE_CPPM_GPIO             INTMODULE_HEARTBEAT_GPIO
-#define TRAINER_MODULE_CPPM_TIMER_Channel    LL_TIM_CHANNEL_CH1
-#define TRAINER_MODULE_CPPM_TIMER_IRQn       TIM4_IRQn
-#define TRAINER_MODULE_CPPM_TIMER_IRQHandler TIM4_IRQHandler
-#define TRAINER_MODULE_CPPM_GPIO_AF          LL_GPIO_AF_2
+#if !defined(RADIO_V16)
+  #define TRAINER_MODULE_CPPM_TIMER            TIM4
+  #define TRAINER_MODULE_CPPM_FREQ             (PERI1_FREQUENCY * TIMER_MULT_APB1)
+  #define TRAINER_MODULE_CPPM_GPIO             INTMODULE_HEARTBEAT_GPIO
+  #define TRAINER_MODULE_CPPM_TIMER_Channel    LL_TIM_CHANNEL_CH1
+  #define TRAINER_MODULE_CPPM_TIMER_IRQn       TIM4_IRQn
+  #define TRAINER_MODULE_CPPM_TIMER_IRQHandler TIM4_IRQHandler
+  #define TRAINER_MODULE_CPPM_GPIO_AF          LL_GPIO_AF_2
+#endif
 
 // Millisecond timer
 #define MS_TIMER                        TIM14

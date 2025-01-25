@@ -39,6 +39,7 @@
 #include "tp_gt911.h"
 #endif
 
+#define HAS_HARDWARE_OPTIONS
 
 PACK(typedef struct {
   uint8_t pcbrev:2;
@@ -260,20 +261,6 @@ bool isBacklightEnabled();
 
 // Audio driver
 void audioInit();
-void audioConsumeCurrentBuffer();
-#define audioDisableIrq()             // interrupts must stay enabled on Horus
-#define audioEnableIrq()              // interrupts must stay enabled on Horus
-#if defined(PCBX12S)
-#define setSampleRate(freq)
-#else
-void setSampleRate(uint32_t frequency);
-#define audioWaitReady()
-#endif
-void setScaledVolume(uint8_t volume);
-void setVolume(uint8_t volume);
-int32_t getVolume();
-#define VOLUME_LEVEL_MAX               23
-#define VOLUME_LEVEL_DEF               12
 
 // Telemetry driver
 #define INTMODULE_FIFO_SIZE            512
@@ -292,8 +279,8 @@ void telemetryPortInvertedInit(uint32_t baudrate);
 
 
 // Aux serial port driver
-#if defined(RADIO_TX16S) || defined(RADIO_F16) || defined(RADIO_V16)
-  #define DEBUG_BAUDRATE                  400000
+#if defined(RADIO_TX16S) || defined(RADIO_F16)
+  #define DEBUG_BAUDRATE                  460800
   #define LUA_DEFAULT_BAUDRATE            115200
 #else
   #define DEBUG_BAUDRATE                  115200

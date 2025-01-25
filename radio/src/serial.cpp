@@ -218,8 +218,10 @@ static void serialSetCallBacks(int mode, void* ctx, const etx_serial_port_t* por
 #endif
 
   case UART_MODE_SBUS_TRAINER:
-    sbusSetAuxGetByte(ctx, getByte);
-    // TODO: setRxCb (see MODE_LUA)
+    sbusSetReceiveCtx(ctx, drv);
+    if (drv && drv->setIdleCb) {
+      drv->setIdleCb(ctx, sbusAuxFrameReceived, nullptr);
+    }
     break;
 
   case UART_MODE_TELEMETRY:
@@ -486,20 +488,10 @@ void serialInit(uint8_t port_nr, int mode)
 
 void initSerialPorts()
 {
-#if defined(DEBUG)
-  // AUX1 and serialPortStates was already initialized early in DEBUG config
-  for (uint8_t port_nr = 0; port_nr < MAX_AUX_SERIAL; port_nr++) {
-    if (port_nr != SP_AUX1) {
-      auto mode = getSerialPortMode(port_nr);
-      serialInit(port_nr, mode);
-    }
-  }
-#else
   for (uint8_t port_nr = 0; port_nr < MAX_AUX_SERIAL; port_nr++) {
     auto mode = getSerialPortMode(port_nr);
     serialInit(port_nr, mode);
   }
-#endif
 }
 
 int serialGetMode(uint8_t port_nr)

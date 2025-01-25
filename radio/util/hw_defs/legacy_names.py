@@ -344,6 +344,59 @@ LEGACY_NAMES = [
         }
     },
     {
+        "targets": {"gx12"},
+        "inputs": {
+            "LH": {
+                "yaml": "Rud",
+                "lua": "rud",
+                "description": "Rudder"
+            },
+            "LV": {
+                "yaml": "Ele",
+                "lua": "ele",
+                "description": "Elevator"
+            },
+            "RV": {
+                "yaml": "Thr",
+                "lua": "thr",
+                "description": "Throttle"
+            },
+            "RH": {
+                "yaml": "Ail",
+                "lua": "ail",
+                "description": "Aileron"
+            },
+            "P1": {
+                "yaml": "POT1",
+                "lua": "p1",
+                "label": "P1",
+                "short_label": "1",
+                "description": "Potentiometer 1"
+            },
+            "P2": {
+                "yaml": "POT2",
+                "lua": "p2",
+                "label": "P2",
+                "short_label": "2",
+                "description": "Potentiometer 2"
+            },
+            "SL1": {
+                "yaml": "SLIDER1",
+                "lua": "s1",
+                "label": "S1",
+                "short_label": "S1",
+                "description": "Left slider"
+            },
+            "SL2": {
+                "yaml": "SLIDER2",
+                "lua": "s2",
+                "label": "S2",
+                "short_label": "S2",
+                "description": "Right slider"
+            }
+        }
+    },
+    {
         "targets": {"mt12"},
         "inputs": {
             "ST": {
@@ -431,7 +484,7 @@ LEGACY_NAMES = [
             "lr3pro",
             "nv14", "el18",
             "t8", "t12",
-            "tlite", "tlitef4", "tpro", "tprov2", "tpros",
+            "tlite", "tlitef4", "tpro", "tprov2", "tpros", "bumblebee",
             "tx12", "tx12mk2",
             "x7", "x7access",
             "xlite", "xlites",
@@ -623,6 +676,37 @@ LEGACY_NAMES = [
                 "label": "EXT4",
                 "short_label": "E4",
                 "description": "Ext 4"
+            }
+        }
+    },
+    {
+        "targets": {
+            "nb4p"
+        },
+        "inputs": {
+            "ST": {
+                "yaml": "ST",
+                "lua": "ste",
+                "description": "Steering"
+            },
+            "TH": {
+                "yaml": "TH",
+                "lua": "thr",
+                "description": "Throttle"
+            },
+            "P1": {
+                "yaml": "POT1",
+                "lua": "s1",
+                "label": "VR1L",
+                "short_label": "1",
+                "description": "Potentiometer 1"
+            },
+            "P2": {
+                "yaml": "POT2",
+                "lua": "s2",
+                "label": "VR1R",
+                "short_label": "2",
+                "description": "Potentiometer 2"
             }
         }
     },
@@ -859,10 +943,33 @@ LEGACY_NAMES = [
                 "lua": "rs",
                 "label": "RS",
                 "short_label": "R",
-                "description": "Right slider"
-            }
-        }
-    }
+                "description": "Right slider",
+            },
+        },
+    },
+    {
+        "targets": {"h747", "h7rs"},
+        "inputs": {
+            "LH": {"yaml": "Rud", "lua": "rud", "description": "Rudder"},
+            "LV": {"yaml": "Ele", "lua": "ele", "description": "Elevator"},
+            "RV": {"yaml": "Thr", "lua": "thr", "description": "Throttle"},
+            "RH": {"yaml": "Ail", "lua": "ail", "description": "Aileron"},
+            "P1": {
+                "yaml": "POT1",
+                "lua": "s1",
+                "label": "S1",
+                "short_label": "1",
+                "description": "Potentiometer 1",
+            },
+            "P2": {
+                "yaml": "POT2",
+                "lua": "s2",
+                "label": "S2",
+                "short_label": "2",
+                "description": "Potentiometer 2",
+            },
+        },
+    },
 ]
 
 

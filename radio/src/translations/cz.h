@@ -102,13 +102,13 @@
 #define TR_SF_MOD_BIND                 "ModuleBind"
 #define TR_SF_RGBLEDS                  "RGB světlo"
 
-#define TR_SOUND                       TR3("\200\201Zvuk", "\200\201Zvuk", "Hrát zvuk")
-#define TR_PLAY_TRACK                  TR3("\200\201Stopa", "\200\201Stopa", "Přehrát wav")
-#define TR_PLAY_VALUE                  TR3("\200\201Hlásit ", "\200\201Hlásit ", "Hlásit stav")
+#define TR_SOUND                       TR3("\204\205Zvuk", "\204\205Zvuk", "Hrát zvuk")
+#define TR_PLAY_TRACK                  TR3("\204\205Stopa", "\204\205Stopa", "Přehrát wav")
+#define TR_PLAY_VALUE                  TR3("\204\205Hlásit ", "\204\205Hlásit ", "Hlásit stav")
 #define TR_SF_HAPTIC                   "Vibrovat"
 #define TR_SF_PLAY_SCRIPT              TR("Lua", "Lua Skript")
-#define TR_SF_BG_MUSIC                 TR3("\200\201Hudba","\200\201Hudba","Hudba")
-#define TR_SF_BG_MUSIC_PAUSE           TR3("\200\201Hudba ||","\200\201Hudba ||","Hudba pauza")
+#define TR_SF_BG_MUSIC                 TR3("\204\205Hudba","\204\205Hudba","Hudba")
+#define TR_SF_BG_MUSIC_PAUSE           TR3("\204\205Hudba ||","\204\205Hudba ||","Hudba pauza")
 #define TR_SF_LOGS                     "Loguj na SD"
 #define TR_ADJUST_GVAR                 "Nastav"
 #define TR_SF_BACKLIGHT                "Podsvětlení"
@@ -121,6 +121,7 @@
 #define TR_SF_DISABLE_TOUCH            "Deaktivace dotyku"
 #define TR_SF_DISABLE_AUDIO_AMP        "Vypnutí zesilovače zvuku"
 #define TR_SF_SET_SCREEN               "Vybrat hlavní obrazovku"
+#define TR_SF_SET_TELEMSCREEN          "Nast obrazovku"
 #define TR_SF_PUSH_CUST_SWITCH         "Push CS"
 #define TR_SF_LCD_TO_VIDEO             "LCD to Video"
 
@@ -220,6 +221,7 @@
 #define TR_VTRAINER_MASTER_BATTERY     "Učitel/Serial"
 #define TR_VTRAINER_BLUETOOTH          TR("Učitel/BT","Učitel/Bluetooth"),TR("Žák/BT","Žák/Bluetooth")
 #define TR_VTRAINER_MULTI              "Master/Multi"
+#define TR_VTRAINER_CRSF               "Master/CRSF"
 #define TR_VFAILSAFE                   "Nenastaven","Držet","Vlastní","Bez pulzů","Přijímač"
 #define TR_VSENSORTYPES                "Vlastní","Vypočtený"
 #define TR_VFORMULAS                   "Součet","Průměr","Min","Max","Násobení","Celkem","Článek","Spotřeba","Vzdálenost"
@@ -297,8 +299,7 @@
 #define TR_MS                          "ms"
 #define TR_SWITCH                      "Spínač"
 #define TR_FUNCTION_SWITCHES           "Nastavitelné přepínače"
-#define TR_GROUP                       "Group"
-#define TR_GROUP_ALWAYS_ON             "Always on"
+#define TR_FS_COLOR_LIST               "Custom","Off","White","Red","Green","Yellow","Orange","Blue","Pink"
 #define TR_GROUP                       "Group"
 #define TR_GROUP_ALWAYS_ON             "Always on"
 #define TR_GROUPS                      "Always on groups"
@@ -720,6 +721,8 @@
 #define TR_TIME                        "Čas"
 #define TR_MAXBAUDRATE                 "Max baudů"
 #define TR_BAUDRATE                    "Baudrate"
+#define TR_CRSF_ARMING_MODE            "Arm mód"
+#define TR_CRSF_ARMING_MODES           TR_CH"5", TR_SWITCH
 #define TR_SAMPLE_MODE                 "Vzorkovací režim"
 #define TR_SAMPLE_MODES                "Normální","OneBit"
 #define TR_LOADING                     "Načítání..."
@@ -1063,41 +1066,44 @@
   #define TR_BL_INVALID_EEPROM         "\004Neplatny EEPROM!          "
 #endif
 
-#if defined(PCBTARANIS)
-   // Bootloader Taranis specific - ASCII characters only
-  #define TR_BL_RESTORE_EEPROM        "Obnovit EEPROM"
-  #if defined(RADIO_COMMANDO8)
-    #define TR_BL_POWER_KEY           "Stisknete tlacitko napajeni."
-    #define TR_BL_FLASH_EXIT          "Ukoncit rezim nahravani."
-  #endif
-#elif defined(PCBHORUS)
-   // Bootloader Horus specific - ASCII characters only
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            "[ENT] pro vybrani souboru"
-  #define TR_BL_FLASH_KEY             "Drzet dlouze [ENT] pro nahrani"
-  #define TR_BL_ERASE_KEY             "Hold [ENT] long to erase"
-  #define TR_BL_EXIT_KEY              "[RTN] pro ukonceni"
-#elif defined(PCBNV14)
-   // Bootloader NV14 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB pristup"
-  #define TR_BL_CURRENT_FW            "Aktualni firmware:"
-  #define TR_BL_SELECT_KEY            "[R TRIM] pro vybrani souboru"
-  #define TR_BL_FLASH_KEY             "Drzet dlouze [R TRIM] pro nahrani"
-  #define TR_BL_EXIT_KEY              " [L TRIM] pro ukonceni"
-  #define TR_BL_ENABLE                "Povoleno"
-  #define TR_BL_DISABLE               "Zakazano"
+// Bootloader Taranis specific - ASCII characters only
+#define TR_BL_RESTORE_EEPROM           "Obnovit EEPROM"
+#define TR_BL_POWER_KEY                "Stisknete tlacitko napajeni."
+#define TR_BL_FLASH_EXIT               "Ukoncit rezim nahravani."
+
+// Bootloader Horus specific - ASCII characters only
+#define TR_BL_ERASE_INT_FLASH          "Erase Internal Flash Storage"
+#define TR_BL_ERASE_FLASH              "Erase Flash Storage"
+#define TR_BL_ERASE_FLASH_MSG          "This may take up to 200s"
+#define TR_BL_RF_USB_ACCESS            "RF USB access"
+#define TR_BL_CURRENT_FW               "Aktualni firmware:"
+
+#if defined(PCBNV14)
+  #define TR_BL_SELECT_KEY             "[R TRIM] pro vybrani souboru"
+  #define TR_BL_FLASH_KEY              "Drzet dlouze [R TRIM] pro nahrani"
+  #define TR_BL_EXIT_KEY               " [L TRIM] pro ukonceni"
+  #define TR_BL_ENABLE                 "Povoleno"
+  #define TR_BL_DISABLE                "Zakazano"
 #elif defined(PCBPL18)
-   // Bootloader PL18 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            " [TR4 Dn] to select file"
-  #define TR_BL_FLASH_KEY             " Hold [TR4 Dn] long to flash"
-  #define TR_BL_ERASE_KEY             " Hold [TR4 Dn] long to erase"
-  #define TR_BL_EXIT_KEY              " [TR4 Up] to exit"
+  // Bootloader PL18/NB4+ specific - ASCII characters only
+  #define TR_BL_ENABLE                 "Povoleno"
+  #define TR_BL_DISABLE                "Zakazano"
+  #if defined(RADIO_NB4P)
+    #define TR_BL_SELECT_KEY          "[SW1A] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [SW1A] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [SW1A] long to erase"
+    #define TR_BL_EXIT_KEY            "[SW1B] to exit"
+  #else
+    #define TR_BL_SELECT_KEY          "[TR4 Dn] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [TR4 Dn] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [TR4 Dn] long to erase"
+    #define TR_BL_EXIT_KEY            "[TR4 Up] to exit"
+  #endif
+#else
+  #define TR_BL_SELECT_KEY             "[ENT] pro vybrani souboru"
+  #define TR_BL_FLASH_KEY              "Drzet dlouze [ENT] pro nahrani"
+  #define TR_BL_ERASE_KEY              "Hold [ENT] long to erase"
+  #define TR_BL_EXIT_KEY               "[RTN] pro ukonceni"
 #endif
 
 // About screen

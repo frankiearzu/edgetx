@@ -190,6 +190,7 @@ void FunctionLineButton::refresh()
     case FUNC_PLAY_TRACK:
     case FUNC_BACKGND_MUSIC:
     case FUNC_PLAY_SCRIPT:
+    case FUNC_RGB_LED:
       if (ZEXIST(cfn->play.name)) {
         strAppend(s + strlen(s), cfn->play.name, LEN_FUNCTION_NAME);
       } else {
@@ -263,7 +264,7 @@ void FunctionLineButton::refresh()
     lv_obj_clear_state(sfEnable, LV_STATE_CHECKED);
 
   if (HAS_REPEAT_PARAM(func)) {
-    if (func == FUNC_PLAY_SCRIPT) {
+    if (func == FUNC_PLAY_SCRIPT || func == FUNC_RGB_LED) {
       sprintf(s, "(%s)", (CFN_PLAY_REPEAT(cfn) == 0) ? "On" : "1x");
     } else {
       sprintf(
@@ -410,7 +411,7 @@ void FunctionEditPage::updateSpecialFunctionOneWindow()
         choice->setAvailableHandler(isSourceAvailableInResetSpecialFunction);
         choice->setTextHandler([=](int32_t value) {
           if (value < FUNC_RESET_PARAM_FIRST_TELEM)
-            return TEXT_AT_INDEX(STR_VFSWRESET, value);
+            return std::string(STR_VFSWRESET[value]);
           else
             return std::string(
                 g_model.telemetrySensors[value - FUNC_RESET_PARAM_FIRST_TELEM]
@@ -613,7 +614,7 @@ void FunctionEditPage::updateSpecialFunctionOneWindow()
   if (HAS_REPEAT_PARAM(func)) {  // !1x 1x 1s 2s 3s ...
     line = specialFunctionOneWindow->newLine(grid);
     new StaticText(line, rect_t{}, STR_REPEAT);
-    if (func == FUNC_PLAY_SCRIPT) {
+    if (func == FUNC_PLAY_SCRIPT || func == FUNC_RGB_LED) {
       auto repeat = new Choice(line, rect_t{}, 0, 1,
                                GET_DEFAULT((int8_t)CFN_PLAY_REPEAT(cfn)),
                                SET_DEFAULT(CFN_PLAY_REPEAT(cfn)));

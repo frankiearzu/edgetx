@@ -31,6 +31,7 @@
 #include "serial.h"
 #include "usb_joystick.h"
 #include "input_mapping.h"
+#include "debug.h"
 
 #if defined(PCBTARANIS)
   #define N_TARANIS_FIELD(x)
@@ -535,9 +536,13 @@ PACK(struct ModuleData {
       uint8_t telemetryBaudrate:3;
       uint8_t spare1:4 SKIP;
     } ghost);
-    NOBACKUP(struct {
+    NOBACKUP(PACK(struct {
       uint8_t telemetryBaudrate:3;
-    } crsf);
+      uint8_t crsfArmingMode:1;
+      uint8_t spare2:4 SKIP;
+      int16_t crsfArmingTrigger:10 CUST(r_swtchSrc,w_swtchSrc);
+      int16_t spare3:6;
+    }) crsf);
     NOBACKUP(struct {
       uint8_t flags;
     } dsmp);
@@ -622,13 +627,37 @@ PACK(struct CustomScreenData {
   #define SCRIPT_DATA
 #endif
 
+struct RGBLedColor {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+
+  uint32_t getColor() {
+    return ((r << 16) + (g << 8) + b);
+  }
+
+  void setColor(uint32_t color) {
+    r = color >> 16;
+    g = color >> 8;
+    b = color;
+  }
+};
+
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+  #define FUNCTION_SWITCHS_RGB_LEDS_FIELDS \
+    RGBLedColor functionSwitchLedONColor[NUM_FUNCTIONS_SWITCHES]; \
+    RGBLedColor functionSwitchLedOFFColor[NUM_FUNCTIONS_SWITCHES];
+#else
+  #define FUNCTION_SWITCHS_RGB_LEDS_FIELDS
+#endif
 #if defined(FUNCTION_SWITCHES)
   #define FUNCTION_SWITCHS_FIELDS \
     uint16_t functionSwitchConfig;  \
     uint16_t functionSwitchGroup; \
     uint16_t functionSwitchStartConfig; \
     uint8_t functionSwitchLogicalState;  \
-    char switchNames[NUM_FUNCTIONS_SWITCHES][LEN_SWITCH_NAME];
+    char switchNames[NUM_FUNCTIONS_SWITCHES][LEN_SWITCH_NAME]; \
+    FUNCTION_SWITCHS_RGB_LEDS_FIELDS
 #else
   #define FUNCTION_SWITCHS_FIELDS
 #endif
@@ -944,12 +973,8 @@ PACK(struct RadioData {
 
   char ownerRegistrationID[PXX2_LEN_REGISTRATION_ID];
 
-#if defined(ROTARY_ENCODER_NAVIGATION) && !defined(USE_HATS_AS_KEYS)
   CUST_ATTR(rotEncDirection, r_rotEncDirection, nullptr);
   NOBACKUP(uint8_t  rotEncMode:3);
-#else
-  NOBACKUP(uint8_t  rotEncModeSpare:3 SKIP);
-#endif
 
   NOBACKUP(int8_t   uartSampleMode:2); // See UartSampleModes
 

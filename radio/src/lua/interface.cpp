@@ -26,7 +26,7 @@
 #include <algorithm>
 
 #include "edgetx.h"
-#include "bin_allocator.h"
+#include "custom_allocator.h"
 
 #include "lua_api.h"
 #include "lua_event.h"
@@ -276,6 +276,15 @@ void luaClose(lua_State ** L)
   }
 }
 
+void luaClose()
+{
+#if defined(COLORLCD)
+  luaClose(&lsWidgets);
+  extern lua_State* lsStandalone;
+  luaClose(&lsStandalone);
+#endif
+  luaClose(&lsScripts);
+}
 
 void luaRegisterLibraries(lua_State * L)
 {
@@ -348,13 +357,38 @@ void luaFree(lua_State * L, ScriptInternalData & sid)
 }
 
 #if defined(LUA_COMPILER)
+// Buffer for reducing the number of SD writes when dumping .luac files
+#define DLEN 256
+uint8_t dbuf[DLEN];
+int16_t dpos = 0;
+FRESULT dresult = FR_OK;
+
 /// callback for luaU_dump()
 static int luaDumpWriter(lua_State * L, const void* p, size_t size, void* u)
 {
   UNUSED(L);
   UINT written;
-  FRESULT result = f_write((FIL *)u, p, size, &written);
-  return (result != FR_OK && !written);
+  const uint8_t* b = (const uint8_t*)p;
+  while (size > 0) {
+    int len;
+    if (size + dpos > DLEN)
+      len = DLEN - dpos;
+    else
+      len = size;
+    // Copy bytes to the buffer
+    memcpy(&dbuf[dpos], b, len);
+    dpos += len;
+    size -= len;
+    b += len;
+    if (dpos >= DLEN) {
+      // Write to SD when buffer full
+      dresult = f_write((FIL *)u, dbuf, dpos, &written);
+      dpos = 0;
+      if (dresult != FR_OK)
+        break;
+    }
+  }
+  return (dresult != FR_OK);
 }
 
 /*
@@ -371,10 +405,22 @@ static void luaDumpState(lua_State * L, const char * filename, const FILINFO * f
 {
   FIL D;
   if (f_open(&D, filename, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK) {
+    dpos = 0;
+    dresult = FR_OK;
     lua_lock(L);
     luaU_dump(L, getproto(L->top - 1), luaDumpWriter, &D, stripDebug);
     lua_unlock(L);
-    if (f_close(&D) == FR_OK) {
+    if (dpos > 0) {
+      // Write last piece
+      UINT written;
+      dresult = f_write(&D, dbuf, dpos, &written);
+    }
+    if (dresult != FR_OK) {
+      // Save failed, close file handle and delete file.
+      f_close(&D);
+      f_unlink(filename);
+      TRACE("luaDumpState(%s): Error saving bytecode to file.", filename);
+    } else if (f_close(&D) == FR_OK) {
       if (finfo != nullptr)
         f_utime(filename, finfo);  // set the file mod time
       TRACE("luaDumpState(%s): Saved bytecode to file.", filename);
@@ -515,10 +561,12 @@ int luaLoadScriptFileToState(lua_State * L, const char * filename, const char * 
   TRACE("luaLoadScriptFileToState(%s, %s): loading %s", filename, lmode, filenameFull);
 
   // we don't pass <mode> on to loadfilex() because we want lua to load whatever file we specify, regardless of content
+  int t = lua_gettop(L);
   lstatus = luaL_loadfilex(L, filenameFull, nullptr);
 #if defined(LUA_COMPILER)
   // Check for bytecode encoding problem, eg. compiled for x64. Unfortunately Lua doesn't provide a unique error code for this. See Lua/src/lundump.c.
   if (lstatus == LUA_ERRSYNTAX && loadFileType == 2 && frLuaS == FR_OK && strstr(lua_tostring(L, -1), "precompiled")) {
+    lua_settop(L, t); // reset stack to prevent phantom error
     loadFileType = 1;
     scriptNeedsCompile = true;
     strcpy(filenameFull + fnamelen, SCRIPT_EXT);
@@ -592,10 +640,12 @@ static bool luaLoad(const char * pathname, ScriptInternalData & sid)
 
 template<unsigned int LD, unsigned int LF>
 static bool luaLoadFile(const char (&dirname)[LD], const char (&filename)[LF], ScriptInternalData & sid) {
-    constexpr size_t maxlen{LD  + LF + (sizeof(SCRIPT_EXT) - 1) + 1 + 1};  // iff dirname is string-literal (LD includes '\0') this is one byte too large, but with C++11 there is no chance to check if dirname is a literal or a (maybe-unterminated) char-array
-    char pathname[maxlen];
-    snprintf(pathname, maxlen, "%.*s/%.*s%s", LD, dirname, LF, filename, SCRIPT_EXT);    
-    return luaLoad(pathname, sid);
+  // iff dirname is string-literal (LD includes '\0') this is one byte too large,
+  // but with C++11 there is no chance to check if dirname is a literal or a (maybe-unterminated) char-array
+  constexpr size_t maxlen{LD  + LF + (sizeof(SCRIPT_EXT) - 1) + 1 + 1};
+  char pathname[maxlen];
+  snprintf(pathname, maxlen, "%.*s/%.*s%s", LD, dirname, LF, filename, SCRIPT_EXT);    
+  return luaLoad(pathname, sid);
 }
 
 #if defined(LUA_MODEL_SCRIPTS)
@@ -695,7 +745,7 @@ bool isTelemetryScriptAvailable()
 #if defined(PCBTARANIS)
   for (int i = 0; i < luaScriptsCount; i++) {
     ScriptInternalData & sid = scriptInternalData[i];
-    if (sid.reference == SCRIPT_TELEMETRY_FIRST + s_frsky_view) {
+    if (sid.reference == SCRIPT_TELEMETRY_FIRST + selectedTelemView) {
       return true;
     }
   }
@@ -978,6 +1028,8 @@ static void luaLoadScripts(bool init, const char * filename = nullptr)
 
 } // luaLoadScripts
 
+void luaGetValueAndPush(lua_State *L, int src);
+
 void luaExec(const char * filename)
 {
   luaState = INTERPRETER_LOADING;
@@ -1040,7 +1092,7 @@ static bool resumeLua(bool init, bool allowLcdUsage)
       if (allowLcdUsage) {
 #if defined(PCBTARANIS)
         if ((menuHandlers[menuLevel] == menuViewTelemetry &&
-             ref == SCRIPT_TELEMETRY_FIRST + s_frsky_view) ||
+             ref == SCRIPT_TELEMETRY_FIRST + selectedTelemView) ||
             ref == SCRIPT_STANDALONE) {
 #else
         if (ref == SCRIPT_STANDALONE) {
@@ -1049,7 +1101,7 @@ static bool resumeLua(bool init, bool allowLcdUsage)
           luaNextEvent(&evt);
 
           lua_rawgeti(lsScripts, LUA_REGISTRYINDEX, sid.run);
-          lua_pushunsigned(lsScripts, evt.event);
+          lua_pushinteger(lsScripts, evt.event);
           inputsCount = 1;
 
 #if defined(HARDWARE_TOUCH)
@@ -1157,6 +1209,7 @@ static bool resumeLua(bool init, bool allowLcdUsage)
           lua_pop(lsScripts, 1);  /* pop returned value */
          
           if (scriptResult != 0) {
+            killAllEvents();
             TRACE("Script finished with status %d", scriptResult);
             luaState = INTERPRETER_RELOAD_PERMANENT_SCRIPTS;
           }
@@ -1301,14 +1354,14 @@ void luaInit()
   L = nullptr;
 
   if (luaState != INTERPRETER_PANIC) {
-#if defined(USE_BIN_ALLOCATOR)
-    L = lua_newstate(bin_l_alloc, nullptr);   //we use our own allocator!
+#if defined(USE_CUSTOM_ALLOCATOR)
+    L = lua_newstate(custom_l_alloc, nullptr);   //we use our own allocator!
 #elif defined(LUA_ALLOCATOR_TRACER)
     memclear(&lsScriptsTrace, sizeof(lsScriptsTrace));
     lsScriptsTrace.script = "lua_newstate(scripts)";
     L = lua_newstate(tracer_alloc, &lsScriptsTrace);   //we use tracer allocator
 #else
-    L = lua_newstate(l_alloc, nullptr);   //we use Lua default allocator
+    L = luaL_newstate();   //we use Lua default allocator
 #endif
     if (L) {
       // install our panic handler

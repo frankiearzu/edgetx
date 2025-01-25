@@ -191,6 +191,7 @@ target_link_libraries(common
   Qt5::Core
   Qt5::Xml
   Qt5::Widgets
+  Qt5::SerialPort
   ${PTHREAD_LIBRARY}
   ${SDL2_LIBRARIES}
   ${WIN_LINK_LIBRARIES}
@@ -224,7 +225,6 @@ set(companion_NAMES
   burnconfigdialog
   comparedialog
   customizesplashdialog
-  flasheepromdialog
   flashfirmwaredialog
   helpers_html
   labels
@@ -308,6 +308,8 @@ elseif(PCB STREQUAL X7 AND PCBREV STREQUAL TPROV2)
   set(FLAVOUR tprov2)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL TPROS)
   set(FLAVOUR tpros)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL BUMBLEBEE)
+  set(FLAVOUR bumblebee)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL T20)
   set(FLAVOUR t20)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL T20V2)
@@ -320,6 +322,8 @@ elseif(PCB STREQUAL X7 AND PCBREV STREQUAL ZORRO)
   set(FLAVOUR zorro)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL BOXER)
   set(FLAVOUR boxer)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL GX12)
+  set(FLAVOUR gx12)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL POCKET)
   set(FLAVOUR pocket)
 elseif(PCB STREQUAL X7 AND PCBREV STREQUAL LR3PRO)

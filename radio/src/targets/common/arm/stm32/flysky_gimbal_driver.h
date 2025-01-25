@@ -18,8 +18,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
- 
-#define HALLSTICK_BUFF_SIZE             ( 512 )
+
+#pragma once
+
+#include "hal/serial_port.h"
+
+// Max packet size = 1 byte header + 1 byte ID + 1 byte length + 25 bytes payload + 2 bytes CRC = 30 bytes
+// using 32 bytes is more than enough
+#define HALLSTICK_BUFF_SIZE             ( 32 )
 #define FLYSKY_HALL_BAUDRATE            ( 921600 )
 #define FLYSKY_HALL_CHANNEL_COUNT       ( 4 )
 
@@ -124,3 +130,5 @@ extern unsigned short hall_adc_values[FLYSKY_HALL_CHANNEL_COUNT];
 // returns true if the gimbals were detected properly
 bool flysky_gimbal_init();
 
+void flysky_gimbal_deinit();
+const etx_serial_port_t* flysky_gimbal_get_port();

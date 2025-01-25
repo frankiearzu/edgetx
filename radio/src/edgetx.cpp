@@ -34,6 +34,7 @@
 #include "hal/watchdog_driver.h"
 #include "hal/abnormal_reboot.h"
 #include "hal/usb_driver.h"
+#include "hal/audio_driver.h"
 
 #include "timers_driver.h"
 
@@ -73,6 +74,11 @@
 #include <malloc.h>
 #endif
 
+#if defined(LUA)
+#include "lua/lua_states.h"
+#include "lua/custom_allocator.h"
+#endif
+
 RadioData  g_eeGeneral;
 ModelData  g_model;
 
@@ -89,12 +95,7 @@ uint8_t heartbeat;
 safetych_t safetyCh[MAX_OUTPUT_CHANNELS];
 #endif
 
-// __DMA for the MSC_BOT_Data member
 union ReusableBuffer reusableBuffer __DMA;
-
-#if !defined(SIMU)
-uint8_t* MSC_BOT_Data = reusableBuffer.MSC_BOT_Data;
-#endif
 
 #if defined(DEBUG_LATENCY)
 uint8_t latencyToggleSwitch = 0;
@@ -142,6 +143,8 @@ void checkValidMCU(void)
   #define TARGET_IDCODE   0x463
 #elif defined(STM32H750xx) || defined(STM32H747xx)
   #define TARGET_IDCODE   0x450
+#elif defined(STM32H7RS)
+  #define TARGET_IDCODE   0x485
 #else
   // Ensure new radio get registered :)
   #warning "Target MCU code undefined"
@@ -159,6 +162,10 @@ void checkValidMCU(void)
 #endif
 #endif
 }
+
+#if defined(SIMU)
+static bool evalFSok = false;
+#endif
 
 void timer_10ms()
 {
@@ -204,10 +211,15 @@ void timer_10ms()
   }
 
 #if defined(FUNCTION_SWITCHES)
+#if defined(SIMU)
+  if (evalFSok)
+    evalFunctionSwitches();
+#else
   evalFunctionSwitches();
 #endif
+#endif
 
-#if defined(ROTARY_ENCODER_NAVIGATION) && !defined(LIBOPENUI)
+#if defined(ROTARY_ENCODER_NAVIGATION) && !defined(COLORLCD)
   if (rotaryEncoderPollingCycle()) {
     inactivityTimerReset(ActivitySource::Keys);
   }
@@ -1085,10 +1097,6 @@ void edgeTxClose(uint8_t shutdown)
 #endif
   }
 
-#if defined(LUA)
-  luaClose(&lsScripts);
-#endif
-
   logsClose();
 
   storageFlushCurrentModel();
@@ -1112,9 +1120,11 @@ void edgeTxClose(uint8_t shutdown)
   MainWindow::instance()->shutdown();
 #if defined(LUA)
   luaUnregisterWidgets();
-  luaClose(&lsWidgets);
-  lsWidgets = 0;
 #endif
+#endif
+
+#if defined(LUA)
+  luaClose();
 #endif
 
   sdDone();
@@ -1124,7 +1134,7 @@ void edgeTxResume()
 {
   TRACE("edgeTxResume");
 
-  sdMount();
+  if (!sdMounted()) sdInit();
 #if defined(COLORLCD) && defined(LUA)
   // reload widgets
   luaInitThemesAndWidgets();
@@ -1365,8 +1375,6 @@ void edgeTxInit()
   menuHandlers[1] = menuModelSelect;
 #endif
 
-  switchInit();
-
 #if defined(GUI) && !defined(COLORLCD)
   lcdRefreshWait();
   lcdClear();
@@ -1465,7 +1473,7 @@ void edgeTxInit()
   currentSpeakerVolume = requiredSpeakerVolume =
       g_eeGeneral.speakerVolume + VOLUME_LEVEL_DEF;
 #if !defined(SOFTWARE_VOLUME)
-  setScaledVolume(currentSpeakerVolume);
+  audioSetVolume(currentSpeakerVolume);
 #endif
 #endif
 
@@ -1520,9 +1528,10 @@ void edgeTxInit()
 #endif
 
 #if defined(FUNCTION_SWITCHES)
-    if (!UNEXPECTED_SHUTDOWN()) {
-      setFSStartupPosition();
-    }
+    setFSStartupPosition();
+#if defined(SIMU)
+    evalFSok = true;
+#endif
 #endif
 
 #if defined(GUI)
@@ -1599,7 +1608,7 @@ int main()
   checkValidMCU();
 #endif
 
-#if defined(PCBHORUS)
+#if defined(IS_FIRMWARE_COMPATIBLE_WITH_BOARD)
   if (!IS_FIRMWARE_COMPATIBLE_WITH_BOARD()) {
     runFatalErrorScreen(STR_WRONG_PCBREV);
   }
@@ -1883,7 +1892,11 @@ uint32_t availableMemory()
 
   struct mallinfo info = mallinfo();
 
+#if defined(USE_CUSTOM_ALLOCATOR)
+  return ((uint32_t)((unsigned char *)&_heap_end - heap)) + info.fordblks + custom_avail();
+#else
   return ((uint32_t)((unsigned char *)&_heap_end - heap)) + info.fordblks;
+#endif
 #endif
 }
 

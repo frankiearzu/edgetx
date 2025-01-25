@@ -121,6 +121,7 @@
 #define TR_SF_DISABLE_TOUCH            "Сенсор вык"
 #define TR_SF_DISABLE_AUDIO_AMP        "Вык аудио усил."
 #define TR_SF_SET_SCREEN               "Выбр глав экран"
+#define TR_SF_SET_TELEMSCREEN          "Set Screen"
 #define TR_SF_PUSH_CUST_SWITCH         "Push CS"
 #define TR_SF_LCD_TO_VIDEO             "LCD to Video"
 
@@ -215,6 +216,7 @@
 #define TR_VTRAINER_MASTER_BATTERY     "Мастер/Серийный"
 #define TR_VTRAINER_BLUETOOTH          "Мастер/" TR("BT","Bluetooth"), "Раб/" TR("BT","Bluetooth")
 #define TR_VTRAINER_MULTI              "Мастер/Мульти"
+#define TR_VTRAINER_CRSF               "Мастер/CRSF"
 #define TR_VFAILSAFE                   "Не устан","Удерж","Настр","Нет импул","Прием"
 #define TR_VSENSORTYPES                "Настроен","Рассчитан"
 #define TR_VFORMULAS                   "Добав","Средн","Мин","Макс","Умнож","Суммир","Ячейка","Расх","Дист"
@@ -289,8 +291,7 @@
 #define TR_MS                          "ms"
 #define TR_SWITCH                      "Тумблер"
 #define TR_FUNCTION_SWITCHES           "Настр тумблеры"
-#define TR_GROUP                       "Group"
-#define TR_GROUP_ALWAYS_ON             "Always on"
+#define TR_FS_COLOR_LIST               "Custom","Off","White","Red","Green","Yellow","Orange","Blue","Pink"
 #define TR_GROUP                       "Group"
 #define TR_GROUP_ALWAYS_ON             "Always on"
 #define TR_GROUPS                      "Always on groups"
@@ -397,6 +398,7 @@
 #define TR_PLAY_HELLO                  "Звук запуска"
 #define TR_PWR_ON_DELAY                "Время включ"
 #define TR_PWR_OFF_DELAY               "Время выключ"
+#define TR_PWR_AUTO_OFF                TR("Pwr Auto Off","Power Auto Off") 
 #define TR_PWR_ON_OFF_HAPTIC           TR("Pwr ON/OFF Haptic","Power ON/OFF Haptic")
 #define TR_THROTTLE_WARNING            TR("Г-Предупр", "Статис газа")
 #define TR_CUSTOM_THROTTLE_WARNING     TR("Свое пол", "Свое пол?")
@@ -714,6 +716,8 @@
 #define TR_TIME                        "Время"
 #define TR_MAXBAUDRATE                 "Макс скорость"
 #define TR_BAUDRATE                    "Скор пер"
+#define TR_CRSF_ARMING_MODE            "Arm режим"
+#define TR_CRSF_ARMING_MODES           TR_CH"5", TR_SWITCH
 #define TR_SAMPLE_MODE                 TR("Реж выб","Реж выб")
 #define TR_SAMPLE_MODES                "Обыч","Один бит"
 #define TR_LOADING                     "Загрузка..."
@@ -1053,41 +1057,44 @@
   #define TR_BL_INVALID_EEPROM         "\004Not a valid EEPROM!          "
 #endif
 
-#if defined(PCBTARANIS)
-   // Bootloader Taranis specific - ASCII characters only
-  #define TR_BL_RESTORE_EEPROM        "Restore EEPROM"
-  #if defined(RADIO_COMMANDO8)
-    #define TR_BL_POWER_KEY           "Press the power button."
-    #define TR_BL_FLASH_EXIT          "Exit the flashing mode."
-  #endif
-#elif defined(PCBHORUS)
-   // Bootloader Horus specific - ASCII characters only
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            "[ENT] to select file"
-  #define TR_BL_FLASH_KEY             "Hold [ENT] long to flash"
-  #define TR_BL_ERASE_KEY             "Hold [ENT] long to erase"
-  #define TR_BL_EXIT_KEY              "[RTN] to exit"
-#elif defined(PCBNV14)
-   // Bootloader NV14 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_CURRENT_FW            "Current Firmware:"
-  #define TR_BL_SELECT_KEY            "[R TRIM] to select file"
-  #define TR_BL_FLASH_KEY             "Hold [R TRIM] long to flash"
-  #define TR_BL_EXIT_KEY              " [L TRIM] to exit"
-  #define TR_BL_ENABLE                "Enable"
-  #define TR_BL_DISABLE               "Disable"
+// Bootloader Taranis specific - ASCII characters only
+#define TR_BL_RESTORE_EEPROM           "Restore EEPROM"
+#define TR_BL_POWER_KEY                "Press the power button."
+#define TR_BL_FLASH_EXIT               "Exit the flashing mode."
+
+// Bootloader Horus specific - ASCII characters only
+#define TR_BL_ERASE_INT_FLASH          "Erase Internal Flash Storage"
+#define TR_BL_ERASE_FLASH              "Erase Flash Storage"
+#define TR_BL_ERASE_FLASH_MSG          "This may take up to 200s"
+#define TR_BL_RF_USB_ACCESS            "RF USB access"
+#define TR_BL_CURRENT_FW               "Current Firmware:"
+
+#if defined(PCBNV14)
+  #define TR_BL_SELECT_KEY             "[R TRIM] to select file"
+  #define TR_BL_FLASH_KEY              "Hold [R TRIM] long to flash"
+  #define TR_BL_EXIT_KEY               " [L TRIM] to exit"
+  #define TR_BL_ENABLE                 "Enable"
+  #define TR_BL_DISABLE                "Disable"
 #elif defined(PCBPL18)
-   // Bootloader PL18 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            " [TR4 Dn] to select file"
-  #define TR_BL_FLASH_KEY             " Hold [TR4 Dn] long to flash"
-  #define TR_BL_ERASE_KEY             " Hold [TR4 Dn] long to erase"
-  #define TR_BL_EXIT_KEY              " [TR4 Up] to exit"
+  // Bootloader PL18/NB4+ specific - ASCII characters only
+  #define TR_BL_ENABLE                 "Enable"
+  #define TR_BL_DISABLE                "Disable"
+  #if defined(RADIO_NB4P)
+    #define TR_BL_SELECT_KEY          "[SW1A] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [SW1A] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [SW1A] long to erase"
+    #define TR_BL_EXIT_KEY            "[SW1B] to exit"
+  #else
+    #define TR_BL_SELECT_KEY          "[TR4 Dn] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [TR4 Dn] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [TR4 Dn] long to erase"
+    #define TR_BL_EXIT_KEY            "[TR4 Up] to exit"
+  #endif
+#else
+  #define TR_BL_SELECT_KEY             "[ENT] to select file"
+  #define TR_BL_FLASH_KEY              "Hold [ENT] long to flash"
+  #define TR_BL_ERASE_KEY              "Hold [ENT] long to erase"
+  #define TR_BL_EXIT_KEY               "[RTN] to exit"
 #endif
 
 // About screen

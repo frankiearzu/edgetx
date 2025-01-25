@@ -1634,6 +1634,8 @@ QString ModelData::trainerModeToString(int value)
       return tr("Slave/Bluetooth");
     case TRAINER_MODE_MULTI:
       return tr("Master/Multi");
+    case TRAINER_MODE_CRSF:
+      return tr("Master/CRSF");
     default:
       return CPN_STR_UNKNOWN_ITEM;
   }
@@ -1649,6 +1651,16 @@ bool ModelData::isTrainerModeAvailable(const GeneralSettings & generalSettings, 
   if (value == TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE &&
       IS_TARANIS_X9E(board) &&
       generalSettings.bluetoothMode)
+    return false;
+
+  if (value == TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE &&
+      !Boards::getCapability(board, Board::HasTrainerModuleSBUS))
+    return false;
+
+  if ((value == TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE || value == TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE) &&
+      (Boards::getCapability(board, Board::HasTrainerModuleCPPM) ||
+       Boards::getCapability(board, Board::HasTrainerModuleSBUS)) &&
+      moduleData[1].protocol != PULSES_OFF)
     return false;
 
   if (value == TRAINER_MODE_MASTER_SERIAL &&
@@ -1667,16 +1679,6 @@ bool ModelData::isTrainerModeAvailable(const GeneralSettings & generalSettings, 
 
   if (value == TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE &&
       !Boards::getCapability(board, Board::HasTrainerModuleCPPM))
-    return false;
-
-  if (value == TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE &&
-      !Boards::getCapability(board, Board::HasTrainerModuleSBUS))
-    return false;
-
-  if ((value == TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE || value == TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE) &&
-      (Boards::getCapability(board, Board::HasTrainerModuleCPPM) ||
-       Boards::getCapability(board, Board::HasTrainerModuleSBUS)) &&
-      moduleData[1].protocol != PULSES_OFF)
     return false;
 
   if (value == TRAINER_MODE_MULTI &&
@@ -1748,7 +1750,7 @@ AbstractStaticItemModel * ModelData::funcSwitchGroupStartSwitchModel(int switchc
   mdl->setName(AIM_MODELDATA_FUNCSWITCHGROUPSTARTSWITCH);
 
   mdl->appendToItemList(tr("Restore"), 0);
-  for (unsigned int i = 1; i <= switchcnt; i += 1) {
+  for (int i = 1; i <= switchcnt; i += 1) {
     mdl->appendToItemList(tr("SW") + QString::number(i), i);
   }
   mdl->appendToItemList(tr("Off"), switchcnt + 1);
@@ -1857,7 +1859,7 @@ void ModelData::setFuncGroupSwitchStart(unsigned int group, unsigned int value, 
     if (getFuncSwitchGroup(i) == group)
       setFuncSwitchStart(i, value ? ModelData::FUNC_SWITCH_START_OFF : ModelData::FUNC_SWITCH_START_PREVIOUS);
   }
-  if (value > 0 && value <= switchcnt) {
+  if (value > 0 && value <= (unsigned int)switchcnt) {
     setFuncSwitchStart(value - 1, ModelData::FUNC_SWITCH_START_ON);
   }
 }
@@ -1873,7 +1875,7 @@ void ModelData::setGroupSwitchState(uint8_t group, int switchcnt)
         setFuncSwitchConfig(j, FUNC_SWITCH_CONFIG_2POS); // Toggle not valid
       }
     }
-    if (getFuncGroupSwitchStart(group, switchcnt) == switchcnt + 1) {
+    if (getFuncGroupSwitchStart(group, switchcnt) == (unsigned int)switchcnt + 1) {
       // Start state for all switches is off - set all to 'last'
       for (int j = 0; j < switchcnt; j += 1)
         if (getFuncSwitchGroup(j) == group)

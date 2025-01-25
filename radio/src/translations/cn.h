@@ -110,6 +110,7 @@
 #define TR_SF_DISABLE_TOUCH            "禁用触摸"
 #define TR_SF_DISABLE_AUDIO_AMP        "关闭音频功放"
 #define TR_SF_SET_SCREEN               "选择主屏"
+#define TR_SF_SET_TELEMSCREEN          "设置主屏"
 #define TR_SF_PUSH_CUST_SWITCH         "Push CS"
 #define TR_SF_LCD_TO_VIDEO             "屏幕显示图传"
 
@@ -210,6 +211,7 @@
 #define TR_VTRAINER_MASTER_BATTERY     "教练主机/串口"
 #define TR_VTRAINER_BLUETOOTH          "教练主机/蓝牙","教练从机/蓝牙"
 #define TR_VTRAINER_MULTI              "教练主机/多协议"
+#define TR_VTRAINER_CRSF               "教练主机/CRSF"
 #define TR_VFAILSAFE                   "未设置","失控保持","自定义","无脉冲","接收机"
 #define TR_VSENSORTYPES                "自定义","运算"
 #define TR_VFORMULAS                   "加","平均值","最小值","最大值","乘","总计值","单节电池","消耗量","距离"
@@ -283,8 +285,7 @@
 #define TR_MS                          "ms"
 #define TR_SWITCH                      "开关"
 #define TR_FUNCTION_SWITCHES           "可自定义开关"
-#define TR_GROUP                       "Group"
-#define TR_GROUP_ALWAYS_ON             "Always on"
+#define TR_FS_COLOR_LIST               "Custom","Off","White","Red","Green","Yellow","Orange","Blue","Pink"
 #define TR_GROUP                       "Group"
 #define TR_GROUP_ALWAYS_ON             "Always on"
 #define TR_GROUPS                      "Always on groups"
@@ -709,6 +710,8 @@
 #define TR_TIME                        "时间"
 #define TR_MAXBAUDRATE                 "最大带宽"
 #define TR_BAUDRATE                    "波特率"
+#define TR_CRSF_ARMING_MODE            "解锁类型"
+#define TR_CRSF_ARMING_MODES           TR_CH"5", TR_SWITCH
 #define TR_SAMPLE_MODE                 "采样模式"
 #define TR_SAMPLE_MODES                "标准","OneBit"
 #define TR_LOADING                     "加载中..."
@@ -1041,8 +1044,6 @@
   #define TR_BL_HOLD_ENTER_TO_START    "\012Hold [ENT] to start writing"
   #define TR_BL_INVALID_FIRMWARE       "\011Not a valid firmware file!        "
   #define TR_BL_INVALID_EEPROM         "\011Not a valid EEPROM file!          "
-  #define TR_BL_ENABLE                 "Enable"
-  #define TR_BL_DISABLE                "Disable"
 #else
   #define TR_BL_OR_PLUGIN_USB_CABLE    TR_BL_USB_PLUGIN
   #define TR_BL_HOLD_ENTER_TO_START    "\006Hold [ENT] to start"
@@ -1050,39 +1051,44 @@
   #define TR_BL_INVALID_EEPROM         "\004Not a valid EEPROM!          "
 #endif
 
-#if defined(PCBTARANIS)
-   // Bootloader Taranis specific - ASCII characters only
-  #define TR_BL_RESTORE_EEPROM        "Restore EEPROM"
-  #if defined(RADIO_COMMANDO8)
-    #define TR_BL_POWER_KEY           "Press the power button."
-    #define TR_BL_FLASH_EXIT          "Exit the flashing mode."
-  #endif
-#elif defined(PCBHORUS)
-   // Bootloader Horus specific - ASCII characters only
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            "[ENT] to select file"
-  #define TR_BL_FLASH_KEY             "Hold [ENT] long to flash"
-  #define TR_BL_ERASE_KEY             "Hold [ENT] long to erase"
-  #define TR_BL_EXIT_KEY              "[RTN] to exit"
-#elif defined(PCBNV14)
-   // Bootloader NV14 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_CURRENT_FW            "Current Firmware:"
-  #define TR_BL_SELECT_KEY            "[R TRIM] to select file"
-  #define TR_BL_FLASH_KEY             "Hold [R TRIM] long to flash"
-  #define TR_BL_EXIT_KEY              " [L TRIM] to exit"
+// Bootloader Taranis specific - ASCII characters only
+#define TR_BL_RESTORE_EEPROM           "Restore EEPROM"
+#define TR_BL_POWER_KEY                "Press the power button."
+#define TR_BL_FLASH_EXIT               "Exit the flashing mode."
+
+// Bootloader Horus specific - ASCII characters only
+#define TR_BL_ERASE_INT_FLASH          "Erase Internal Flash Storage"
+#define TR_BL_ERASE_FLASH              "Erase Flash Storage"
+#define TR_BL_ERASE_FLASH_MSG          "This may take up to 200s"
+#define TR_BL_RF_USB_ACCESS            "RF USB access"
+#define TR_BL_CURRENT_FW               "Current Firmware:"
+
+#if defined(PCBNV14)
+  #define TR_BL_SELECT_KEY             "[R TRIM] to select file"
+  #define TR_BL_FLASH_KEY              "Hold [R TRIM] long to flash"
+  #define TR_BL_EXIT_KEY               " [L TRIM] to exit"
+  #define TR_BL_ENABLE                 "Enable"
+  #define TR_BL_DISABLE                "Disable"
 #elif defined(PCBPL18)
-   // Bootloader PL18 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            " [TR4 Dn] to select file"
-  #define TR_BL_FLASH_KEY             " Hold [TR4 Dn] long to flash"
-  #define TR_BL_ERASE_KEY             " Hold [TR4 Dn] long to erase"
-  #define TR_BL_EXIT_KEY              " [TR4 Up] to exit"
+  // Bootloader PL18/NB4+ specific - ASCII characters only
+  #define TR_BL_ENABLE                 "Enable"
+  #define TR_BL_DISABLE                "Disable"
+  #if defined(RADIO_NB4P)
+    #define TR_BL_SELECT_KEY          "[SW1A] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [SW1A] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [SW1A] long to erase"
+    #define TR_BL_EXIT_KEY            "[SW1B] to exit"
+  #else
+    #define TR_BL_SELECT_KEY          "[TR4 Dn] to select file"
+    #define TR_BL_FLASH_KEY           "Hold [TR4 Dn] long to flash"
+    #define TR_BL_ERASE_KEY           "Hold [TR4 Dn] long to erase"
+    #define TR_BL_EXIT_KEY            "[TR4 Up] to exit"
+  #endif
+#else
+  #define TR_BL_SELECT_KEY             "[ENT] to select file"
+  #define TR_BL_FLASH_KEY              "Hold [ENT] long to flash"
+  #define TR_BL_ERASE_KEY              "Hold [ENT] long to erase"
+  #define TR_BL_EXIT_KEY               "[RTN] to exit"
 #endif
 
 // About screen

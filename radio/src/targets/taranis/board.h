@@ -89,31 +89,6 @@ enum {
 // Trainer driver
 #define SLAVE_MODE()                    (g_model.trainerData.mode == TRAINER_MODE_SLAVE)
 
-#if defined(TRAINER_DETECT_GPIO)
-  // Trainer detect is a switch on the jack
-  #if defined(TRAINER_DETECT_INVERTED)
-    #define TRAINER_CONNECTED()           (gpio_read(TRAINER_DETECT_GPIO) ? 0 : 1)
-  #else
-    #define TRAINER_CONNECTED()           (gpio_read(TRAINER_DETECT_GPIO) ? 1 : 0)
-  #endif
-#elif defined(PCBXLITES)
-  // Trainer is on the same connector than Headphones
-  enum JackState
-  {
-    SPEAKER_ACTIVE,
-    HEADPHONE_ACTIVE,
-    TRAINER_ACTIVE,
-  };
-  extern uint8_t jackState;
-  #define TRAINER_CONNECTED()           (jackState == TRAINER_ACTIVE)
-#elif defined(PCBXLITE)
-  // No Tainer jack on Taranis X-Lite
-  #define TRAINER_CONNECTED()           false
-#else
-  // Trainer detect catches PPM, detection would use more CPU
-  #define TRAINER_CONNECTED()           true
-#endif
-
 // POTS and SLIDERS default configuration
 #if defined(RADIO_BOXER)
 #define XPOS_CALIB_DEFAULT  {0x5, 0xd, 0x16, 0x1f, 0x28}
@@ -147,6 +122,8 @@ enum {
 #if defined(ADC_GPIO_PIN_STICK_TH)
   #define SURFACE_RADIO  true
 #endif
+
+#define HAS_HARDWARE_OPTIONS
 
 PACK(typedef struct {
   uint8_t pcbrev:2;
@@ -246,43 +223,13 @@ uint8_t isBacklightEnabled();
 void debugPutc(const char c);
 
 // Audio driver
-void audioInit() ;
-void audioEnd() ;
-void dacStart();
-void dacStop();
-void setSampleRate(uint32_t frequency);
-#define VOLUME_LEVEL_MAX  23
-#define VOLUME_LEVEL_DEF  12
-#if !defined(SOFTWARE_VOLUME)
-void setScaledVolume(uint8_t volume);
-void setVolume(uint8_t volume);
-int32_t getVolume();
+void audioInit();
+void audioEnd();
+
+#if defined(PCBXLITES)
+#define SHARED_DSC_HEADPHONE_JACK
+void handleJackConnection();
 #endif
-#if defined(AUDIO_SPEAKER_ENABLE_GPIO)
-void initSpeakerEnable();
-void enableSpeaker();
-void disableSpeaker();
-#else
-static inline void initSpeakerEnable() { }
-static inline void enableSpeaker() { }
-static inline void disableSpeaker() { }
-#endif
-#if defined(HEADPHONE_TRAINER_SWITCH_GPIO)
-void initHeadphoneTrainerSwitch();
-void enableHeadphone();
-void enableTrainer();
-#else
-static inline void initHeadphoneTrainerSwitch() { }
-static inline void enableHeadphone() { }
-static inline void enableTrainer() { }
-#endif
-#if defined(JACK_DETECT_GPIO)
-void initJackDetect();
-bool isJackPlugged();
-#endif
-void audioConsumeCurrentBuffer();
-#define audioDisableIrq()               __disable_irq()
-#define audioEnableIrq()                __enable_irq()
 
 // Haptic driver
 void hapticInit();
@@ -408,25 +355,27 @@ void setTopBatteryValue(uint32_t volts);
 
 #define INTMODULE_FIFO_SIZE            128
 
-#if defined (RADIO_TX12)
-  #define BATTERY_DIVIDER 22830
-#elif defined (RADIO_T8) || defined(RADIO_COMMANDO8)
+#if defined(MANUFACTURER_RADIOMASTER) || defined(MANUFACTURER_JUMPER)
+// --- MOSFET ---- R2 --- MCU
+//                     |__ R1 --- GND
+//
+#define VBAT_DIV_R1       160 // kOhms
+#define VBAT_DIV_R2       499 // kOhms
+#if defined(MANUFACTURER_JUMPER)
+#define VBAT_MOSFET_DROP   50 // * 10mV
+#else
+#define VBAT_MOSFET_DROP   25 // * 10mV
+#endif
+#else //--- MOSFET ---- R2 --- MCU
+#if defined (RADIO_T8) || defined(RADIO_COMMANDO8)
   #define BATTERY_DIVIDER 50000
-#elif defined (RADIO_ZORRO) || defined(RADIO_TX12MK2) || defined(RADIO_BOXER) || defined(RADIO_MT12) || defined(RADIO_POCKET)
-  #define BATTERY_DIVIDER 23711 // = 2047*128*BATT_SCALE/(100*(VREF*(160+499)/160))
 #elif defined (RADIO_LR3PRO)
   #define BATTERY_DIVIDER 39500
 #else
   #define BATTERY_DIVIDER 26214
 #endif 
-
-#if defined(RADIO_ZORRO) || defined(RADIO_TX12MK2) || defined(RADIO_BOXER) || defined(RADIO_MT12) || defined(RADIO_POCKET)
-  #define VOLTAGE_DROP 45
-#elif defined(RADIO_TPROV2) || defined(RADIO_TPROS) || defined(RADIO_FAMILY_T20)
-  #define VOLTAGE_DROP 60
-#else
-  #define VOLTAGE_DROP 20
-#endif
+#define VOLTAGE_DROP 20
+#endif //--- MOSFET ---- R2 --- MCU
 
 #if defined(RADIO_FAMILY_T20)
 #define NUM_TRIMS                               8

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) EdgeTx
+* Copyright (C) EdgeTx
  *
  * Based on code named
  *   opentx - https://github.com/opentx/opentx
@@ -24,4 +24,6 @@
 void rgbLedStart();
 void rgbLedStop();
 void rgbSetLedColor(unsigned char, unsigned char, unsigned char, unsigned char);
+uint32_t rgbGetLedColor(uint8_t led);
+bool rgbGetState(unsigned char);
 void rgbLedColorApply();

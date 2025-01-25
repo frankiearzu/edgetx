@@ -24,6 +24,7 @@
 #include "hal/adc_driver.h"
 #include "hal/switch_driver.h"
 #include "hal/module_port.h"
+#include "hal/rgbleds.h"
 #include "switches.h"
 
 #if defined(USBJ_EX)
@@ -119,6 +120,10 @@ enum MenuModelSetupItems {
 #if defined(CROSSFIRE) || defined(GHOST)
   ITEM_MODEL_SETUP_INTERNAL_MODULE_TYPE,
   ITEM_MODEL_SETUP_INTERNAL_MODULE_SERIALSTATUS,
+  #if defined(CROSSFIRE)
+  ITEM_MODEL_SETUP_INTERNAL_MODULE_ARMING_MODE,
+  ITEM_MODEL_SETUP_INTERNAL_MODULE_ARMING_TRIGGER,
+  #endif
 #endif
 #if defined(MULTIMODULE)
   ITEM_MODEL_SETUP_INTERNAL_MODULE_PROTOCOL,
@@ -155,6 +160,10 @@ enum MenuModelSetupItems {
 #if defined(CROSSFIRE) || defined(GHOST)
   ITEM_MODEL_SETUP_EXTERNAL_MODULE_BAUDRATE,
   ITEM_MODEL_SETUP_EXTERNAL_MODULE_SERIALSTATUS,
+  #if defined(CROSSFIRE)
+  ITEM_MODEL_SETUP_EXTERNAL_MODULE_ARMING_MODE,
+  ITEM_MODEL_SETUP_EXTERNAL_MODULE_ARMING_TRIGGER,
+  #endif
 #endif
 #if defined(MULTIMODULE)
   ITEM_MODEL_SETUP_EXTERNAL_MODULE_PROTOCOL,
@@ -268,9 +277,13 @@ static uint8_t VIEWOPT_ROW(uint8_t value) { return expandState.viewOpt ? value :
 #else
 #define IF_MODULE_BAUDRATE_ADJUST(module, xxx) (isModuleCrossfire(module) ? (uint8_t)(xxx) : HIDDEN_ROW)
 #endif
+#define IF_MODULE_ARMED(module, xxx) (CRSF_ELRS_MIN_VER(module, 4, 0) ? (uint8_t)(xxx) : HIDDEN_ROW)
+#define IF_MODULE_ARMED_TRIGGER(module, xxx) ((CRSF_ELRS_MIN_VER(module, 4, 0) && g_model.moduleData[module].crsf.crsfArmingMode) ? (uint8_t)(xxx) : HIDDEN_ROW)
 #else
 #define IF_MODULE_SYNCED(module, xxx)
 #define IF_MODULE_BAUDRATE_ADJUST(module, xxx)
+#define IF_MODULE_ARMED(module, xxx)
+#define IF_MODULE_ARMED_TRIGGER(module, xxx)
 #endif
 
 
@@ -306,7 +319,9 @@ static uint8_t VIEWOPT_ROW(uint8_t value) { return expandState.viewOpt ? value :
 
 inline uint8_t MODULE_TYPE_ROWS(int moduleIdx)
 {
-  if (isModuleXJT(moduleIdx) || isModuleISRM(moduleIdx) || isModuleR9MNonAccess(moduleIdx) || isModuleDSM2(moduleIdx) || isModulePPM(moduleIdx))
+  if (isModuleXJT(moduleIdx) || isModuleISRM(moduleIdx) ||
+      isModuleR9MNonAccess(moduleIdx) || isModuleDSM2(moduleIdx) ||
+      isModuleSBUS(moduleIdx) || isModulePPM(moduleIdx))
     return 1;
   else
     return 0;
@@ -341,13 +356,13 @@ inline uint8_t TIMER_ROW(uint8_t timer, uint8_t value)
 #define EXTRA_MODULE_ROWS
 
 #if defined(FUNCTION_SWITCHES)
-  #define FUNCTION_SWITCHES_ROWS        1,                       \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
-                                        FS_ROW(NAVIGATION_LINE_BY_LINE|3),  \
+  #define FUNCTION_SWITCHES_ROWS        0, \
+                                        FS_ROW(0),  \
+                                        FS_ROW(0),  \
+                                        FS_ROW(0),  \
+                                        FS_ROW(0),  \
+                                        FS_ROW(0),  \
+                                        FS_ROW(0),  \
                                         FS_ROW(G1_ROW(LABEL())), \
                                         FS_ROW(G1_ROW(0)),  \
                                         FS_ROW(G1_ROW(0)),  \
@@ -471,6 +486,8 @@ void editTimerCountdown(int timerIdx, coord_t y, LcdFlags attr, event_t event)
     LABEL(InternalModule), \
     MODULE_TYPE_ROWS(INTERNAL_MODULE),         /* ITEM_MODEL_SETUP_INTERNAL_MODULE_TYPE */ \
     IF_MODULE_SYNCED(INTERNAL_MODULE, 0),      /* Sync rate + errors */ \
+    IF_MODULE_ARMED(INTERNAL_MODULE, 0),       /* Arming Mode */ \
+    IF_MODULE_ARMED_TRIGGER(INTERNAL_MODULE, 0),/* Arming Trigger */ \
     MULTIMODULE_TYPE_ROWS(INTERNAL_MODULE)     /* ITEM_MODEL_SETUP_INTERNAL_MODULE_PROTOCOL */ \
     MULTIMODULE_SUBTYPE_ROWS(INTERNAL_MODULE)  /* ITEM_MODEL_SETUP_INTERNAL_MODULE_SUBTYPE */ \
     MULTIMODULE_STATUS_ROWS(INTERNAL_MODULE)   /* ITEM_MODEL_SETUP_INTERNAL_MODULE_STATUS, ITEM_MODEL_SETUP_INTERNAL_MODULE_SYNCSTATUS */ \
@@ -498,6 +515,8 @@ void editTimerCountdown(int timerIdx, coord_t y, LcdFlags attr, event_t event)
     MODULE_TYPE_ROWS(EXTERNAL_MODULE),  \
     IF_MODULE_BAUDRATE_ADJUST(EXTERNAL_MODULE, 0), /* Baudrate */ \
     IF_MODULE_SYNCED(EXTERNAL_MODULE, 0),          /* Sync rate + errors */ \
+    IF_MODULE_ARMED(EXTERNAL_MODULE, 0),           /* Arming Mode */ \
+    IF_MODULE_ARMED_TRIGGER(EXTERNAL_MODULE, 0),   /* Arming TRIGGER */ \
     MULTIMODULE_TYPE_ROWS(EXTERNAL_MODULE)         /* PROTOCOL */ \
     MULTIMODULE_SUBTYPE_ROWS(EXTERNAL_MODULE)      /* SUBTYPE */  \
     MULTIMODULE_STATUS_ROWS(EXTERNAL_MODULE)  \
@@ -554,8 +573,8 @@ uint8_t viewOptChoice(coord_t y, const char* title, uint8_t value, uint8_t attr,
 }
 
 #if defined(FUNCTION_SWITCHES)
-int cfsIndex;
-uint8_t cfsGroup;
+static int cfsIndex;
+static uint8_t cfsGroup;
 
 bool checkCFSTypeAvailable(int val)
 {
@@ -575,6 +594,154 @@ bool checkCFSGroupAvailable(int group)
 bool checkCFSSwitchAvailable(int sw)
 {
   return (sw == 0) || (sw == NUM_FUNCTIONS_SWITCHES + 1) || (FSWITCH_GROUP(sw - 1) == cfsGroup);
+}
+
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+bool checkCFSColorAvailable(int col)
+{
+  return col > 0;
+}
+#endif
+
+enum CFSFields {
+  CFS_FIELD_NAME,
+  CFS_FIELD_TYPE,
+  CFS_FIELD_GROUP,
+  CFS_FIELD_START,
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+  CFS_FIELD_COLOR_LABEL,
+  CFS_FIELD_ON_COLOR,
+  CFS_FIELD_OFF_COLOR,
+#endif
+  CFS_FIELD_COUNT
+};
+
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+static void menuCFSColor(coord_t y, RGBLedColor& color, const char* title, LcdFlags attr, event_t event)
+{
+  uint8_t selectedColor = getRGBColorIndex(color.getColor());
+  selectedColor = editChoice(30, y, title, \
+    STR_FS_COLOR_LIST, selectedColor, 0, DIM(colorTable), menuHorizontalPosition == 0 ? attr : 0, event, INDENT_WIDTH, checkCFSColorAvailable);
+  if (attr && menuHorizontalPosition == 0 && checkIncDec_Ret) {
+    color.setColor(colorTable[selectedColor - 1]);
+    storageDirty(EE_MODEL);
+  }
+
+  lcdDrawNumber(LCD_W - 6 * FW, y, color.r, (menuHorizontalPosition == 1 ? attr : 0) | RIGHT);
+  if (attr && menuHorizontalPosition == 1)
+    color.r = checkIncDecModel(event, color.r, 0, 255);
+
+  lcdDrawNumber(LCD_W - 3 * FW, y, color.g, (menuHorizontalPosition == 2 ? attr : 0) | RIGHT);
+  if (attr && menuHorizontalPosition == 2)
+    color.g = checkIncDecModel(event, color.g, 0, 255);
+
+  lcdDrawNumber(LCD_W, y, color.b, (menuHorizontalPosition == 3 ? attr : 0) | RIGHT);
+  if (attr && menuHorizontalPosition == 3)
+    color.b = checkIncDecModel(event, color.b, 0, 255);
+}
+#endif
+
+void menuModelCFSOne(event_t event)
+{
+  std::string s(STR_CHAR_SWITCH);
+  s += switchGetName(cfsIndex + switchGetMaxSwitches());
+
+  int config = FSWITCH_CONFIG(cfsIndex);
+  uint8_t group = FSWITCH_GROUP(cfsIndex);
+  int startPos = FSWITCH_STARTUP(cfsIndex);
+
+  SUBMENU(s.c_str(), CFS_FIELD_COUNT,
+    {
+      0,
+      0,
+      (uint8_t)((config != SWITCH_NONE) ? 0 : HIDDEN_ROW),
+      (uint8_t)((config != SWITCH_NONE && config != SWITCH_TOGGLE && group == 0) ? 0 : HIDDEN_ROW),
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+      LABEL(),
+      3,
+      3,
+#endif
+    });
+  
+  int8_t sub = menuVerticalPosition;
+  int8_t editMode = s_editMode;
+
+  coord_t y = MENU_HEADER_HEIGHT + 1;
+
+  for (int k = 0; k < NUM_BODY_LINES; k += 1) {
+    int i = k + menuVerticalOffset;
+    for (int j = 0; j <= i; j += 1) {
+      if (j < (int)DIM(mstate_tab) && mstate_tab[j] == HIDDEN_ROW) {
+        i += 1;
+      }
+    }
+    LcdFlags attr = (sub == i ? (editMode > 0 ? BLINK | INVERS : INVERS) : 0);
+
+    switch(i) {
+      case CFS_FIELD_NAME:
+        editSingleName(MODEL_SETUP_2ND_COLUMN, y, STR_NAME, g_model.switchNames[cfsIndex],
+                       LEN_SWITCH_NAME, event, (attr != 0),
+                       editMode);
+        break;
+
+      case CFS_FIELD_TYPE:
+        config = editChoice(MODEL_SETUP_2ND_COLUMN, y, STR_SWITCH_TYPE, STR_SWTYPES, config, SWITCH_NONE, SWITCH_2POS, attr, event, 0, checkCFSTypeAvailable);
+        if (attr && checkIncDec_Ret) {
+          FSWITCH_SET_CONFIG(cfsIndex, config);
+          if (config == SWITCH_TOGGLE) {
+            FSWITCH_SET_STARTUP(cfsIndex, FS_START_PREVIOUS);  // Toggle switches do not have startup position
+          }
+        }
+        break;
+
+      case CFS_FIELD_GROUP:
+        group = editChoice(MODEL_SETUP_2ND_COLUMN, y, STR_SWITCH_GROUP, STR_FSGROUPS, group, 0, 3, attr, event, 0, checkCFSGroupAvailable);
+        if (attr && checkIncDec_Ret) {
+          int oldGroup = FSWITCH_GROUP(cfsIndex);
+          if (groupHasSwitchOn(group))
+            setFSLogicalState(cfsIndex, 0);
+          FSWITCH_SET_GROUP(cfsIndex, group);
+          if (group > 0) {
+            FSWITCH_SET_STARTUP(cfsIndex, groupDefaultSwitch(group) == -1 ? FS_START_PREVIOUS : FS_START_OFF);
+            if (config == SWITCH_TOGGLE && IS_FSWITCH_GROUP_ON(group))
+              FSWITCH_SET_CONFIG(cfsIndex, SWITCH_2POS);
+            setGroupSwitchState(group, cfsIndex);
+          } else {
+            FSWITCH_SET_STARTUP(cfsIndex, FS_START_PREVIOUS);
+          }
+          setGroupSwitchState(oldGroup);
+        }
+        break;
+
+      case CFS_FIELD_START:
+        lcdDrawText(0, y, STR_SWITCH_STARTUP);
+        lcdDrawText(MODEL_SETUP_2ND_COLUMN, y, _fct_sw_start[startPos], attr ? (s_editMode ? INVERS + BLINK : INVERS) : 0);
+        if (attr) {
+          startPos = checkIncDec(event, startPos, FS_START_ON, FS_START_PREVIOUS, EE_MODEL);
+          FSWITCH_SET_STARTUP(cfsIndex, startPos);
+        }
+        break;
+
+#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+      case CFS_FIELD_COLOR_LABEL:
+        lcdDrawText(0, y, STR_BLCOLOR);
+        lcdDrawText(LCD_W - 6 * FW, y, "R", RIGHT | SMLSIZE);
+        lcdDrawText(LCD_W - 3 * FW, y, "G", RIGHT | SMLSIZE);
+        lcdDrawText(LCD_W, y, "B", RIGHT | SMLSIZE);
+        break;
+
+      case CFS_FIELD_ON_COLOR:
+        menuCFSColor(y, g_model.functionSwitchLedONColor[cfsIndex], STR_OFFON[1], attr, event);
+        break;
+
+      case CFS_FIELD_OFF_COLOR:
+        menuCFSColor(y, g_model.functionSwitchLedOFFColor[cfsIndex], STR_OFFON[0], attr, event);
+        break;
+#endif
+    }
+
+    y += FH;
+  }
 }
 #endif
 
@@ -820,56 +987,31 @@ void menuModelSetup(event_t event)
       case ITEM_MODEL_SETUP_SW5:
       case ITEM_MODEL_SETUP_SW6:
       {
-        int index = k - ITEM_MODEL_SETUP_SW1;
-        lcdDrawSizedText(INDENT_WIDTH, y, STR_CHAR_SWITCH, 2, menuHorizontalPosition < 0 ? attr : 0);
-        lcdDrawText(lcdNextPos, y, switchGetName(index+switchGetMaxSwitches()), menuHorizontalPosition < 0 ? attr : 0);
+        int index = (k - ITEM_MODEL_SETUP_SW1);
+        lcdDrawSizedText(INDENT_WIDTH, y, STR_CHAR_SWITCH, 2, attr);
+        lcdDrawText(lcdNextPos, y, switchGetName(index+switchGetMaxSwitches()), attr);
 
-        if (ZEXIST(g_model.switchNames[index]) || (attr && s_editMode > 0 && menuHorizontalPosition == 0))
-          editName(35, y, g_model.switchNames[index], LEN_SWITCH_NAME, event, menuHorizontalPosition == 0 ? attr : 0, 0, old_editMode);
-        else
-          lcdDrawMMM(35, y, menuHorizontalPosition == 0 ? attr : 0);
-
-        cfsIndex = index;
-        int config = FSWITCH_CONFIG(index);
-        config = editChoice(30 + 5*FW, y, "", STR_SWTYPES, config, SWITCH_NONE, SWITCH_2POS, menuHorizontalPosition == 1 ? attr : 0, event, 0, checkCFSTypeAvailable);
-        if (attr && checkIncDec_Ret && menuHorizontalPosition == 1) {
-          FSWITCH_SET_CONFIG(index, config);
-          if (config == SWITCH_TOGGLE) {
-            FSWITCH_SET_STARTUP(index, FS_START_PREVIOUS);  // Toggle switches do not have startup position
-          }
+        if (attr && event == EVT_KEY_BREAK(KEY_ENTER)) {
+          cfsIndex = index;
+          pushMenu(menuModelCFSOne);
         }
+
+        if (ZEXIST(g_model.switchNames[index]))
+          lcdDrawText(35, y, g_model.switchNames[index]);
+        else
+          lcdDrawMMM(35, y, 0);
+
+        int config = FSWITCH_CONFIG(index);
+        lcdDrawText(30 + 5 * FW, y, STR_SWTYPES[config]);
 
         if (config != SWITCH_NONE) {
           uint8_t group = FSWITCH_GROUP(index);
-          group = editChoice(30 + 13 * FW, y, "", STR_FSGROUPS, group, 0, 3, menuHorizontalPosition == 2 ? attr : 0, event, 0, checkCFSGroupAvailable);
-          if (attr && checkIncDec_Ret && menuHorizontalPosition == 2) {
-            int oldGroup = FSWITCH_GROUP(index);
-            if (groupHasSwitchOn(group))
-              setFSLogicalState(index, 0);
-            FSWITCH_SET_GROUP(index, group);
-            if (group > 0) {
-              FSWITCH_SET_STARTUP(index, groupDefaultSwitch(group) == -1 ? FS_START_PREVIOUS : FS_START_OFF);
-              if (config == SWITCH_TOGGLE && IS_FSWITCH_GROUP_ON(group))
-                FSWITCH_SET_CONFIG(index, SWITCH_2POS);
-              setGroupSwitchState(group, index);
-            } else {
-              FSWITCH_SET_STARTUP(index, FS_START_PREVIOUS);
-            }
-            setGroupSwitchState(oldGroup);
-          }
+          lcdDrawText(30 + 13 * FW, y, STR_FSGROUPS[group]);
 
           if (config != SWITCH_TOGGLE && group == 0) {
             int startPos = FSWITCH_STARTUP(index);
-            lcdDrawText(30 + 15 * FW, y, _fct_sw_start[startPos], attr && (menuHorizontalPosition == 3) ? (s_editMode ? INVERS + BLINK : INVERS) : 0);
-            if (attr && menuHorizontalPosition == 3) {
-              startPos = checkIncDec(event, startPos, FS_START_ON, FS_START_PREVIOUS, EE_MODEL);
-              FSWITCH_SET_STARTUP(index, startPos);
-            }
-          } else if (attr && menuHorizontalPosition == 3) {
-            repeatLastCursorMove(event);
+            lcdDrawText(30 + 15 * FW, y, _fct_sw_start[startPos]);
           }
-        } else if (attr && menuHorizontalPosition >= 2) {
-          repeatLastCursorMove(event);
         }
         break;
       }
@@ -1234,6 +1376,10 @@ void menuModelSetup(event_t event)
           lcdDrawTextAtIndex(lcdNextPos + 3, y, STR_ISRM_RF_PROTOCOLS,
                              g_model.moduleData[INTERNAL_MODULE].subType,
                              menuHorizontalPosition == 1 ? attr : 0);
+        else if (isModuleSBUS(moduleIdx))
+          lcdDrawTextAtIndex(lcdNextPos + 3, y, STR_SBUS_PROTOCOLS,
+                             g_model.moduleData[moduleIdx].subType,
+                             menuHorizontalPosition == 1 ? attr : 0);
 #if defined(PPM)
         else if (isModulePPM(moduleIdx))
           lcdDrawTextAtIndex(lcdNextPos + 3, y, STR_PPM_PROTOCOLS,
@@ -1314,11 +1460,15 @@ void menuModelSetup(event_t event)
                   CHECK_INCDEC_MODELVAR(event,
                                         g_model.moduleData[moduleIdx].subType,
                                         DSM2_PROTO_LP45, DSM2_PROTO_DSMX);
+                } else if (isModuleSBUS(moduleIdx)) {
+                  CHECK_INCDEC_MODELVAR(event,
+                                        g_model.moduleData[moduleIdx].subType,
+                                        SBUS_PROTO_TLM_NONE, SBUS_PROTO_TLM_SPORT);
 #if defined(PPM)
                 } else if (isModulePPM(moduleIdx)) {
                   CHECK_INCDEC_MODELVAR(event,
                                         g_model.moduleData[moduleIdx].subType,
-                                        PPM_PROTO_TLM_NONE, PPM_PROTO_TLM_MLINK);
+                                        PPM_PROTO_TLM_NONE, PPM_PROTO_TLM_SPORT);
 #endif
                 } else if (isModuleR9MNonAccess(moduleIdx)) {
                   g_model.moduleData[moduleIdx].subType =
@@ -1407,6 +1557,31 @@ void menuModelSetup(event_t event)
         lcdDrawTextIndented(y, STR_STATUS);
         lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, 1000000 / getMixerSchedulerPeriod(), LEFT | attr);
         lcdDrawText(lcdNextPos, y, "Hz ", attr);
+        break;
+#endif
+
+#if defined(CROSSFIRE)
+#if defined(HARDWARE_INTERNAL_MODULE)
+      case ITEM_MODEL_SETUP_INTERNAL_MODULE_ARMING_MODE:
+#endif
+#if defined(HARDWARE_EXTERNAL_MODULE)
+      case ITEM_MODEL_SETUP_EXTERNAL_MODULE_ARMING_MODE:
+#endif 
+        g_model.moduleData[moduleIdx].crsf.crsfArmingMode = 
+          editChoice(MODEL_SETUP_2ND_COLUMN, y, STR_CRSF_ARMING_MODE, STR_CRSF_ARMING_MODES, 
+          g_model.moduleData[moduleIdx].crsf.crsfArmingMode, ARMING_MODE_FIRST, ARMING_MODE_LAST, attr, event, INDENT_WIDTH);
+        break;
+
+#if defined(HARDWARE_INTERNAL_MODULE)
+      case ITEM_MODEL_SETUP_INTERNAL_MODULE_ARMING_TRIGGER:
+#endif
+#if defined(HARDWARE_EXTERNAL_MODULE)
+      case ITEM_MODEL_SETUP_EXTERNAL_MODULE_ARMING_TRIGGER:
+#endif
+        lcdDrawTextIndented(y, STR_SWITCH);
+        drawSwitch(MODEL_SETUP_2ND_COLUMN, y, g_model.moduleData[moduleIdx].crsf.crsfArmingTrigger, attr);
+        if(attr)
+          CHECK_INCDEC_SWITCH(event, g_model.moduleData[moduleIdx].crsf.crsfArmingTrigger, SWSRC_FIRST, SWSRC_LAST, EE_MODEL, isSwitchAvailableForArming);
         break;
 #endif
 

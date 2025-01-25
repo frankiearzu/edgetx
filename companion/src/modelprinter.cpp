@@ -154,11 +154,6 @@ QString ModelPrinter::printBoolean(const bool val, const int typ)
   }
 }
 
-QString ModelPrinter::printEEpromSize()
-{
-  return QString("%1 ").arg(getCurrentEEpromInterface()->getSize(model)) + tr("bytes");
-}
-
 QString ModelPrinter::printChannelName(int idx)
 {
   QString str = RawSource(SOURCE_TYPE_CH, idx + 1).toString(&model, &generalSettings);
@@ -207,7 +202,7 @@ QString ModelPrinter::printModule(int idx)
   else {
     str << printLabelValue(tr("Protocol"), ModuleData::protocolToString(module.protocol));
     if (module.protocol) {
-      if (module.protocol == PULSES_PPM)
+      if (module.protocol == PULSES_PPM || module.protocol == PULSES_SBUS)
         str << printLabelValue(tr("Sub Type"), module.subTypeToString());
       str << printLabelValue(tr("Channels"), QString("%1-%2").arg(module.channelsStart + 1).arg(module.channelsStart + module.channelsCount));
       if (module.protocol == PULSES_PPM || module.protocol == PULSES_SBUS) {
@@ -238,6 +233,12 @@ QString ModelPrinter::printModule(int idx)
         }
         if (module.protocol == PULSES_GHOST) {
           str << printLabelValue(tr("Raw 12 bits"), printBoolean(module.ghost.raw12bits, BOOLEAN_YN));
+        }
+        if (module.protocol == PULSES_CROSSFIRE) {
+          str << printLabelValue(tr("Arming mode"), module.crsfArmingModeToString());
+          if (module.crsf.crsfArmingMode == ModuleData::CRSF_ARMING_MODE_SWITCH) {
+            str << printLabelValue(tr("Switch"), RawSwitch(module.crsf.crsfArmingTrigger).toString());
+          }
         }
       }
     }

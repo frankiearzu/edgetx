@@ -51,14 +51,14 @@ static void luaStandaloneInit()
 {
   luaClose(&lsStandalone);
 
-#if defined(USE_BIN_ALLOCATOR)
-  lsStandalone = lua_newstate(bin_l_alloc, nullptr);   //we use our own allocator!
+#if defined(USE_CUSTOM_ALLOCATOR)
+  lsStandalone = lua_newstate(custom_l_alloc, nullptr);   //we use our own allocator!
 #elif defined(LUA_ALLOCATOR_TRACER)
   memclear(&lsStandaloneTrace, sizeof(lsStandaloneTrace));
   lsStandaloneTrace.script = "lua_newstate(scripts)";
   lsStandalone = lua_newstate(tracer_alloc, &lsStandaloneTrace);   //we use tracer allocator
 #else
-  lsStandalone = lua_newstate(l_alloc, nullptr);   //we use Lua default allocator
+  lsStandalone = luaL_newstate();   //we use Lua default allocator
 #endif
   if (lsStandalone) {
     // install our panic handler

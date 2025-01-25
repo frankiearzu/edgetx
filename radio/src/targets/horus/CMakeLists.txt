@@ -128,6 +128,7 @@ if (PCB STREQUAL X10)
     set(DEFAULT_INTERNAL_MODULE CROSSFIRE CACHE STRING "Default internal module")
     option(BLUETOOTH "Support for bluetooth module" OFF)
     option(INTERNAL_GPS "Support for internal NMEA GPS" OFF)
+    set(SWSERIALPOWER YES)
     add_definitions(-DMANUFACTURER_HELLORADIOSKY)
     set(INTERNAL_GPS_BAUDRATE "9600" CACHE STRING "Baud rate for internal GPS")
     set(FLEXSW "2" CACHE STRING "Max flex inputs usable as switches")
@@ -187,7 +188,7 @@ set(RADIO_DEPENDENCIES
   ${BITMAPS_TARGET}
   )
 
-add_definitions(-DPCBHORUS -DSTM32F429_439xx -DSTM32F429xx -DSDRAM -DCCMRAM -DCOLORLCD -DHARDWARE_KEYS)
+add_definitions(-DPCBHORUS -DSTM32F429_439xx -DSTM32F429xx -DSDRAM -DCOLORLCD -DHARDWARE_KEYS)
 add_definitions(-DAUDIO -DVOICE -DRTCLOCK)
 add_definitions(-DGPS_USART_BAUDRATE=${INTERNAL_GPS_BAUDRATE})
 add_definitions(-DPWR_BUTTON_${PWR_BUTTON})

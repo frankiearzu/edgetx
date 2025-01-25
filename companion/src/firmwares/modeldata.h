@@ -83,7 +83,8 @@ enum TrainerMode {
   TRAINER_MODE_MASTER_BLUETOOTH,
   TRAINER_MODE_SLAVE_BLUETOOTH,
   TRAINER_MODE_MULTI,
-  TRAINER_MODE_LAST = TRAINER_MODE_MULTI
+  TRAINER_MODE_CRSF,
+  TRAINER_MODE_LAST = TRAINER_MODE_CRSF
 };
 
 #define MODEL_NAME_LEN 15
@@ -101,6 +102,15 @@ class USBJoystickChData {
     unsigned int btn_num;
     unsigned int switch_npos;
     void clear() { memset(reinterpret_cast<void *>(this), 0, sizeof(USBJoystickChData)); }
+};
+
+class RGBLedColor {
+  public:
+    RGBLedColor() { clear(); }
+    int r;
+    int g;
+    int b;
+    void clear() { memset(reinterpret_cast<void *>(this), 0, sizeof(RGBLedColor)); }
 };
 
 class ModelData {
@@ -231,6 +241,8 @@ class ModelData {
     unsigned int functionSwitchStartConfig;
     unsigned int functionSwitchLogicalState;
     char functionSwitchNames[CPN_MAX_SWITCHES_FUNCTION][HARDWARE_NAME_LEN + 1];
+    RGBLedColor functionSwitchLedONColor[CPN_MAX_SWITCHES_FUNCTION];
+    RGBLedColor functionSwitchLedOFFColor[CPN_MAX_SWITCHES_FUNCTION];
 
     // Custom USB joytsick mapping
     unsigned int usbJoystickExtMode;

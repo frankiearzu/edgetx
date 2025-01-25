@@ -11,15 +11,18 @@ static const stm32_switch_t _switch_defs[] = {
   {% if switch.type == '2POS' %}
   {
     "{{ switch.name }}",
-    {{ switch.gpio }}, {{ switch.pin }},
+    {{ switch.gpio or "nullptr" }},
+    {{ switch.pin or 0 }},
     nullptr, 0,
     SWITCH_HW_2POS, {{ 'SWITCH_HW_INVERTED' if switch.inverted else 0 }}
   },
   {% elif switch.type == '3POS' %}
   {
     "{{ switch.name }}",
-    {{ switch.gpio_high }}, {{ switch.pin_high }},
-    {{ switch.gpio_low }}, {{ switch.pin_low }},
+    {{ switch.gpio_high or "nullptr" }},
+    {{ switch.pin_high or 0 }},
+    {{ switch.gpio_low or "nullptr" }},
+    {{ switch.pin_low or 0 }},
     SWITCH_HW_3POS, {{ 'SWITCH_HW_INVERTED' if switch.inverted else 0 }}
   },
   {% elif switch.type == 'ADC' %}
@@ -34,7 +37,8 @@ static const stm32_switch_t _switch_defs[] = {
 {% for switch in function_switches %}
   {
     "{{ switch.name }}",
-    {{ switch.gpio }}, {{ switch.pin }},
+    {{ switch.gpio or "nullptr" }},
+    {{ switch.pin or 0 }},
     nullptr, 0,
     SWITCH_HW_2POS, {{ 'SWITCH_HW_INVERTED' if switch.inverted else 0 }}
   },
@@ -55,9 +59,11 @@ static inline void _init_switches()
   pinInit.Mode = LL_GPIO_MODE_INPUT;
   pinInit.Pull = LL_GPIO_PULL_UP;
 {% for sw_gpio, pins in switch_gpios.items() | sort %}
+  {% if sw_gpio %}
   stm32_gpio_enable_clock({{ sw_gpio }});
   pinInit.Pin = {{ pins | join('|') }};
   LL_GPIO_Init({{ sw_gpio }}, &pinInit);
+  {% endif %}
 {% endfor %}
 }
 

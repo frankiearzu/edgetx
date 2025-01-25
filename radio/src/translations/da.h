@@ -121,6 +121,7 @@
 #define TR_SF_DISABLE_TOUCH            "Ikke berøringsaktiv"
 #define TR_SF_DISABLE_AUDIO_AMP        TR("Sluk audio amp", "Sluk audio amplifier")
 #define TR_SF_SET_SCREEN               "Vælg hoved skærm"
+#define TR_SF_SET_TELEMSCREEN          "Vis skærm"
 #define TR_SF_PUSH_CUST_SWITCH         "Push CS"
 #define TR_SF_LCD_TO_VIDEO             "LCD to Video"
 
@@ -216,6 +217,7 @@
 #define TR_VTRAINER_MASTER_BATTERY     "Træner/Seriel"
 #define TR_VTRAINER_BLUETOOTH          "Træner/" TR("BT","Bluetooth"), "Elev/" TR("BT","Bluetooth")
 #define TR_VTRAINER_MULTI              "Træner/Multi"
+#define TR_VTRAINER_CRSF               "Træner/CRSF"
 #define TR_VFAILSAFE                   "Ikke sat","Hold","Tilpasset","Ingen puls","Modtager"
 #define TR_VSENSORTYPES                "Tilpasset","Beregnet"
 #define TR_VFORMULAS                   "Tillæg","Gennems.","Min","Max","Gange","Sum","Cell","Forbrug","Afstand"
@@ -290,13 +292,12 @@
 #define TR_MS                          "ms"
 #define TR_SWITCH                      "Kontakt"
 #define TR_FUNCTION_SWITCHES           "Kontakter der kan tilpasses"
-#define TR_GROUP                       "Gruppe"
-#define TR_GROUP_ALWAYS_ON             "Altid til"
-#define TR_GROUP                       "Gruppe"
-#define TR_GROUP_ALWAYS_ON             "Altid til"
-#define TR_GROUPS                      "Altid til gruppe"
-#define TR_LAST                        "Sidste"
-#define TR_MORE_INFO                   "Mere info"
+#define TR_FS_COLOR_LIST               "Custom","Off","White","Red","Green","Yellow","Orange","Blue","Pink"
+#define TR_GROUP                       "Group"
+#define TR_GROUP_ALWAYS_ON             "Always on"
+#define TR_GROUPS                      "Always on groups"
+#define TR_LAST                        "Last"
+#define TR_MORE_INFO                   "More info"
 #define TR_SWITCH_TYPE                 "Type"
 #define TR_SWITCH_STARTUP              "Start"
 #define TR_SWITCH_GROUP                "Gruppe"
@@ -713,6 +714,8 @@
 #define TR_TIME                        "Tid"
 #define TR_MAXBAUDRATE                 "Max bauds"
 #define TR_BAUDRATE                    "Baudrate"
+#define TR_CRSF_ARMING_MODE            TR("Aktiver m.", "Aktiver med")
+#define TR_CRSF_ARMING_MODES           TR_CH"5", TR_SWITCH
 #define TR_SAMPLE_MODE                 "Måle tilstand"
 #define TR_SAMPLE_MODES                "Normal","EnBit"
 #define TR_LOADING                     "Indlæser..."
@@ -1051,41 +1054,42 @@
   #define TR_BL_INVALID_EEPROM         "\004Ikke en EEPROM fil!          "
 #endif
 
-#if defined(PCBTARANIS)
-   // Bootloader Taranis specific - ASCII characters only
-  #define TR_BL_RESTORE_EEPROM        "Genskab EEPROM"
-  #if defined(RADIO_COMMANDO8)
-    #define TR_BL_POWER_KEY           "Tryk power knap."
-    #define TR_BL_FLASH_EXIT          "Forlad installation tilstand."
-  #endif
-#elif defined(PCBHORUS)
-   // Bootloader Horus specific - ASCII characters only
-  #define TR_BL_ERASE_INT_FLASH       "Erase Internal Flash Storage"
-  #define TR_BL_ERASE_FLASH           "Erase Flash Storage"
-  #define TR_BL_ERASE_FLASH_MSG       "This may take up to 200s"
-  #define TR_BL_SELECT_KEY            "[ENT] for at bruge fil"
-  #define TR_BL_FLASH_KEY             "[ENT] længe, for at starte"
-  #define TR_BL_ERASE_KEY             "Hold [ENT] long to erase"
-  #define TR_BL_EXIT_KEY              "[RTN] for at forlade"
-#elif defined(PCBNV14)
-   // Bootloader NV14 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB adgang"
-  #define TR_BL_CURRENT_FW            "Firmware version:"
-  #define TR_BL_SELECT_KEY            "[R TRIM] for at bruge fil"
-  #define TR_BL_FLASH_KEY             "[R TRIM] længe, for at starte"
-  #define TR_BL_EXIT_KEY              "[L TRIM] for at forlade"
-  #define TR_BL_ENABLE                "Aktiver"
-  #define TR_BL_DISABLE               "Deaktiver"
+// Bootloader Taranis specific - ASCII characters only
+#define TR_BL_RESTORE_EEPROM           "Genskab EEPROM"
+#define TR_BL_POWER_KEY                "Tryk power knap."
+#define TR_BL_FLASH_EXIT               "Forlad installation tilstand."
+
+// Bootloader Horus specific - ASCII characters only
+#define TR_BL_ERASE_INT_FLASH          "Slet intern flash lager"
+#define TR_BL_ERASE_FLASH              "Slet flash lager"
+#define TR_BL_ERASE_FLASH_MSG          "Dette kan vare op til 200s"
+#define TR_BL_RF_USB_ACCESS            "RF USB adgang"
+#define TR_BL_CURRENT_FW               "Current firmware:"
+
+#if defined(PCBNV14)
+  #define TR_BL_SELECT_KEY             "[R TRIM] for at bruge fil"
+  #define TR_BL_FLASH_KEY              "[R TRIM] længe, for at starte"
+  #define TR_BL_EXIT_KEY               "[L TRIM] for at forlade"
+  #define TR_BL_ENABLE                 "Aktiver"
+  #define TR_BL_DISABLE                "Deaktiver"
 #elif defined(PCBPL18)
-   // Bootloader PL18 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB adgang"
-  #define TR_BL_ERASE_INT_FLASH       "Slet intern flash lager"
-  #define TR_BL_ERASE_FLASH           "Slet flash lager"
-  #define TR_BL_ERASE_FLASH_MSG       "Dette kan vare op til 200s"
-  #define TR_BL_SELECT_KEY            " [TR4 Dn] for at bruge fil"
-  #define TR_BL_FLASH_KEY             " Hold [TR4 Dn] længe, for brænding"
-  #define TR_BL_ERASE_KEY             " Hold [TR4 Dn] længe, for sletning"
-  #define TR_BL_EXIT_KEY              " [TR4 Up] for at forlade"
+  // Bootloader PL18/NB4+ specific - ASCII characters only
+  #if defined(RADIO_NB4P)
+    #define TR_BL_SELECT_KEY            "[SW1A] for at bruge fil"
+    #define TR_BL_FLASH_KEY             "Hold [SW1A] længe, for brænding"
+    #define TR_BL_ERASE_KEY             "Hold [SW1A] længe, for sletning"
+    #define TR_BL_EXIT_KEY              "[SW1B] for at forlade"
+  #else
+    #define TR_BL_SELECT_KEY            "[TR4 Dn] for at bruge fil"
+    #define TR_BL_FLASH_KEY             "Hold [TR4 Dn] længe, for brænding"
+    #define TR_BL_ERASE_KEY             "Hold [TR4 Dn] længe, for sletning"
+    #define TR_BL_EXIT_KEY              "[TR4 Up] for at forlade"
+  #endif
+#else
+  #define TR_BL_SELECT_KEY             "[ENT] for at bruge fil"
+  #define TR_BL_FLASH_KEY              "[ENT] længe, for at starte"
+  #define TR_BL_ERASE_KEY              "Hold [ENT] long to erase"
+  #define TR_BL_EXIT_KEY               "[RTN] for at forlade"
 #endif
 
 // About screen

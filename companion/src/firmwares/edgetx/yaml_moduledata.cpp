@@ -23,6 +23,7 @@
 #include "yaml_generalsettings.h"
 #include "eeprominterface.h"
 #include "rawsource.h"
+#include "yaml_rawswitch.h"
 #include "multiprotocols.h"
 
 //  type: TYPE_MULTIMODULE
@@ -108,7 +109,13 @@ static const YamlLookupTable r9mLut = {
 
 static const YamlLookupTable ppmLut = {
   { 0, "NOTLM" },
-  { 1, "MLINK" }
+  { 1, "MLINK" },
+  { 2, "SPort"}
+};
+
+static const YamlLookupTable sbusLut = {
+  { 0, "NOTLM" },
+  { 1, "SPort"}
 };
 
 static const YamlLookupTable dsmLut = {
@@ -173,6 +180,9 @@ Node convert<ModuleData>::encode(const ModuleData& rhs)
       break;
     case PULSES_PPM:
       node["subType"] = LookupValue(ppmLut, subtype);
+      break;
+    case PULSES_SBUS:
+      node["subType"] = LookupValue(sbusLut, subtype);
       break;
     case PULSES_MULTIMODULE: {
       int rfProtocol = rhs.multi.rfProtocol + 1;
@@ -242,6 +252,8 @@ Node convert<ModuleData>::encode(const ModuleData& rhs)
         Node crsf;
         YamlTelemetryBaudrate br(&rhs.crsf.telemetryBaudrate);
         crsf["telemetryBaudrate"] = br.value;
+        crsf["crsfArmingMode"] = rhs.crsf.crsfArmingMode;
+        crsf["crsfArmingTrigger"] = rhs.crsf.crsfArmingTrigger;
         mod["crsf"] = crsf;
     } break;
     case PULSES_LEMON_DSMP: {
@@ -313,6 +325,9 @@ bool convert<ModuleData>::decode(const Node& node, ModuleData& rhs)
     } break;
     case PULSES_PPM: {
       subType >> ppmLut >> rhs.subType;
+    } break;
+    case PULSES_SBUS: {
+      subType >> sbusLut >> rhs.subType;
     } break;
     case PULSES_LP45: {
       int subProto = 0;
@@ -399,6 +414,8 @@ bool convert<ModuleData>::decode(const Node& node, ModuleData& rhs)
           YamlTelemetryBaudrate telemetryBaudrate;
           crsf["telemetryBaudrate"] >> telemetryBaudrate.value;
           telemetryBaudrate.toCpn(&rhs.crsf.telemetryBaudrate, getCurrentFirmware()->getBoard());
+          crsf["crsfArmingMode"] >> rhs.crsf.crsfArmingMode;
+          crsf["crsfArmingTrigger"] >> rhs.crsf.crsfArmingTrigger;
       } else if (mod["dsmp"]) {
           Node dsmp = mod["dsmp"];
           dsmp["flags"] >> rhs.dsmp.flags;

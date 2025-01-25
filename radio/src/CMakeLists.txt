@@ -57,7 +57,11 @@ option(BOOTLOADER "Include Bootloader" ON)
 option(FWDRIVE "Attach also firmware drive with USB" OFF)
 option(DISABLE_MCUCHECK "Disable MCU check at start" OFF)
 option(LUA_MIXER "Enable LUA mixer/model scripts support" ON)
-option(USBJ_EX "Enable USB Joystick Extension" ON)
+if(PCB STREQUAL X9D+ AND PCBREV STREQUAL 2019)
+  option(USBJ_EX "Enable USB Joystick Extension" OFF)
+else()
+  option(USBJ_EX "Enable USB Joystick Extension" ON)
+endif()
 
 # since we reset all default CMAKE compiler flags for firmware builds, provide an alternate way for user to specify additional flags.
 set(FIRMWARE_C_FLAGS "" CACHE STRING "Additional flags for firmware target c compiler (note: all CMAKE_C_FLAGS[_*] are ignored for firmware/bootloader).")
@@ -79,6 +83,8 @@ elseif(PCB STREQUAL NV14)
   include(targets/nv14/CMakeLists.txt)
 elseif(PCB STREQUAL PL18)
   include(targets/pl18/CMakeLists.txt)
+elseif(PCB STREQUAL STM32H7S78_DK)
+  include(targets/stm32h7s78-dk/CMakeLists.txt)
 elseif(PCB STREQUAL X9E OR PCB STREQUAL X9D+ OR PCB STREQUAL X9D OR PCB STREQUAL X7 OR PCB STREQUAL X9LITE OR PCB STREQUAL X9LITES OR PCB STREQUAL XLITE OR PCB STREQUAL XLITES)
   include(targets/taranis/CMakeLists.txt)
 else()
@@ -96,7 +102,7 @@ include(hal/CMakeLists.txt)
 add_subdirectory(bitmaps)
 add_subdirectory(fonts)
 
-if(CPU_TYPE STREQUAL STM32H7)
+if(CPU_TYPE STREQUAL STM32H7 OR CPU_TYPE STREQUAL STM32H7RS)
   include(targets/common/arm/stm32/h7/CMakeLists.txt)
 endif()
 
@@ -118,6 +124,10 @@ if(ARCH STREQUAL ARM)
 endif()
 
 include_directories(targets/${TARGET_DIR} ${THIRDPARTY_DIR})
+
+if(NATIVE_BUILD)
+  include_directories(targets/simu)
+endif()
 
 foreach(LANGUAGE ${RADIO_LANGUAGES})
   if(TRANSLATIONS STREQUAL ${LANGUAGE})
@@ -283,15 +293,16 @@ endif()
 if(DEBUG STREQUAL RTT)
   set(DEBUG ON)
   set(DEBUG_SEGGER_RTT ON)
-  add_definitions(-DDEBUG_SEGGER_RTT)
-  set(SRC ${SRC} ${THIRDPARTY_DIR}/Segger_RTT/RTT/SEGGER_RTT.c)
 endif()
 
 if(DEBUG STREQUAL RTT_NO_USB)
   set(DEBUG ON)
   set(DEBUG_SEGGER_RTT ON)
-  add_definitions(-DDEBUG_SEGGER_RTT)
   add_definitions(-DDEBUG_DISABLE_USB)
+endif()
+
+if(DEBUG_SEGGER_RTT)
+  add_definitions(-DDEBUG_SEGGER_RTT -DSEGGER_RTT_BUFFER_SECTION=".ram")
   set(SRC ${SRC} ${THIRDPARTY_DIR}/Segger_RTT/RTT/SEGGER_RTT.c)
 endif()
 
@@ -480,6 +491,14 @@ if(NATIVE_BUILD)
   return()
 endif()
 
+# Silence CMake 2.8+ warning about unused variable (ie. if specified when not relevant)
+set(ignore_USE_UNSUPPORTED_TOOLCHAIN "${USE_UNSUPPORTED_TOOLCHAIN}")
+
+if(NOT USE_UNSUPPORTED_TOOLCHAIN AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "14.2.1")
+  message("CPP Compiler: ${CMAKE_CXX_COMPILER}, version ${CMAKE_CXX_COMPILER_VERSION}")
+  message(FATAL_ERROR "Only Arm GNU Toolchain version 14.2.rel1 is supported!!")
+endif()
+
 set(CMAKE_C_FLAGS "${FIRMWARE_C_FLAGS}")
 set(CMAKE_C_FLAGS_DEBUG "${FIRMWARE_C_FLAGS_DEBUG}")
 set(CMAKE_C_FLAGS_RELEASE "${FIRMWARE_C_FLAGS}")
@@ -493,7 +512,7 @@ find_program(BASH bash
   DOC "bash shell for firmware size report (eg. c:/cygwin/bin/bash.exe on Windows)."
   )
 
-set(OPT "s" CACHE STRING "Optimization mode (0/1/2/s")
+set(OPT "s" CACHE STRING "Optimization mode (0/1/2/s)")
 
 set(COMMON_FLAGS "-mcpu=${MCU} -mthumb -fomit-frame-pointer -fverbose-asm -Wa,-ahlms=firmware.lst")
 set(COMMON_FLAGS "${COMMON_FLAGS} -gdwarf-2 -fno-exceptions -fdata-sections -ffunction-sections")
@@ -502,7 +521,9 @@ set(COMMON_FLAGS "${COMMON_FLAGS} -O${OPT} ${FPU_FLAGS}")
 set(COMMON_FLAGS "${COMMON_FLAGS} ${WARNING_FLAGS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMMON_FLAGS} -Wimplicit")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS} -fno-rtti")
+
+# "-Wno-register" because ${THIRDPARTY_DIR}/STM32F2xx_HAL_Driver uses invalid C++17 storage class specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS} -fno-rtti -Wno-register")
 
 if(SDRAM)
   # Target with SDRAM do not need a custom allocator for now
@@ -510,8 +531,8 @@ if(SDRAM)
   message("Target has SDRAM, do not use BIN_ALLOCATOR")
 else()
   # Nano's malloc does work well with lua, use our own
-  add_definitions(-DUSE_BIN_ALLOCATOR)
-  set(SRC ${SRC} bin_allocator.cpp)
+  add_definitions(-DUSE_CUSTOM_ALLOCATOR)
+  set(SRC ${SRC} lua/custom_allocator.cpp)
 endif()
 
 # Bootloader
@@ -534,8 +555,10 @@ if(DEBUG)
   target_compile_definitions(stm32_drivers_w_dbg_fw PRIVATE -DDEBUG)
 endif()
 
+set(LINKER_SCRIPT firmware.ld)
+
 target_link_options(firmware PRIVATE
-  -lm -T${LINKER_DIR}/firmware.ld
+  -lm -T${LINKER_DIR}/${LINKER_SCRIPT}
   -Wl,-Map=firmware.map,--cref,--no-warn-mismatch,--gc-sections
   --specs=nano.specs
 )
@@ -582,11 +605,24 @@ else()
   message("-- Bootloader contained in firmware binary")
 endif()
 
+if(FIRMWARE_FORMAT_UF2)
+  add_custom_command(
+    TARGET firmware POST_BUILD
+    COMMAND ${PYTHON_EXECUTABLE} ${RADIO_DIRECTORY}/util/elf2uf2.py
+        --reboot auto --device "${FLAVOUR}"
+        --version "edgetx-${VERSION}-${VERSION_SUFFIX} (${GIT_STR})"
+        -i firmware.elf firmware.uf2
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM
+  )
+endif()
+  
 add_custom_command(
   TARGET firmware POST_BUILD
   COMMAND ${CMAKE_OBJCOPY} -O binary ${OBJCOPY_ARGS} firmware.elf firmware.bin
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   )
+  
 
 find_program(GAWK gawk
   HINTS "c:/cygwin/bin/" "c:/msys/bin/"

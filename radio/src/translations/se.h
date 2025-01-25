@@ -123,6 +123,7 @@
 #define TR_SF_DISABLE_TOUCH             "Ej pekskärm"
 #define TR_SF_DISABLE_AUDIO_AMP         TR("Audioförst. av","Audioförstärkare av")
 #define TR_SF_SET_SCREEN                "Sätt huvudskärm"
+#define TR_SF_SET_TELEMSCREEN           "Visa skärm"
 #define TR_SF_PUSH_CUST_SWITCH          "Tryck CS"
 #define TR_SF_LCD_TO_VIDEO              "LCD till Video"
 
@@ -223,6 +224,7 @@
 #define TR_VTRAINER_MASTER_BATTERY      "Lärare/Seriell"
 #define TR_VTRAINER_BLUETOOTH           TR("Lärare/BT","Lärare/Bluetooth"),TR("Elev/BT","Elev/Bluetooth")
 #define TR_VTRAINER_MULTI               "Lärare/Multi"
+#define TR_VTRAINER_CRSF                "Lärare/CRSF"
 
 #define TR_VFAILSAFE                    "Ej inställt","Lås senaste",TR("Eget","Egna värden"),"Inga pulser","Mottagare"
 #define TR_VSENSORTYPES                 "Anpassad","Beräknad"
@@ -299,6 +301,7 @@
 #define TR_MS                           "ms"
 #define TR_SWITCH                       "Brytare"
 #define TR_FUNCTION_SWITCHES            "Anpassningsbara brytare"
+#define TR_FS_COLOR_LIST               "Custom","Off","White","Red","Green","Yellow","Orange","Blue","Pink"
 #define TR_GROUP                        "Grupp"
 #define TR_GROUP_ALWAYS_ON              "Alltid på"
 #define TR_GROUPS                       "Always on groups"
@@ -722,6 +725,8 @@
 #define TR_TEMP_CALIB                   "Temp. kalib."
 #define TR_TIME                         "Tid"
 #define TR_BAUDRATE                     "Baudrate"
+#define TR_CRSF_ARMING_MODE             TR("Aktivera m.", "Aktivera med")
+#define TR_CRSF_ARMING_MODES            TR_CH"5", TR_SWITCH
 #define TR_MAXBAUDRATE                  "Max bauds"
 #define TR_SAMPLE_MODE                  TR("Sampling","Sample Mode")
 #define TR_SAMPLE_MODES                 "Normal","OneBit"
@@ -1075,41 +1080,43 @@
   #define TR_BL_INVALID_EEPROM          "\004Ej en giltig EEPROM!       "
 #endif
 
-#if defined(PCBTARANIS)
-   // Bootloader Taranis specific - ASCII characters only
-  #define TR_BL_RESTORE_EEPROM          "Aaterställ EEPROM"
-  #if defined(RADIO_COMMANDO8)
-    #define TR_BL_POWER_KEY             "Tryck paa startknappen."
-    #define TR_BL_FLASH_EXIT            "Avsluta flashningsläget."
-  #endif
-#elif defined(PCBHORUS)
-   // Bootloader Horus specific - ASCII characters only
-  #define TR_BL_ERASE_INT_FLASH         "Radera interna flashminnet"
-  #define TR_BL_ERASE_FLASH             "Radera flashminnet"
-  #define TR_BL_ERASE_FLASH_MSG         "Detta kan ta upp till 200s"
-  #define TR_BL_SELECT_KEY              "[ENT] för att vaelja fil"
-  #define TR_BL_FLASH_KEY               "Tryck [ENT] foer att flasha"
-  #define TR_BL_ERASE_KEY               "Haall ner [ENT] foer att raderag"
-  #define TR_BL_EXIT_KEY                "[RTN] foer att avbryta"
-#elif defined(PCBNV14)
-   // Bootloader NV14 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS           "RF USB access"
-  #define TR_BL_CURRENT_FW              "Nuvarande firmware:"
+// Bootloader Taranis specific - ASCII characters only
+#define TR_BL_RESTORE_EEPROM            "Aaterställ EEPROM"
+#define TR_BL_POWER_KEY                 "Tryck paa startknappen."
+#define TR_BL_FLASH_EXIT                "Avsluta flashningsläget."
+
+// Bootloader Horus specific - ASCII characters only
+#define TR_BL_ERASE_INT_FLASH           "Radera interna flashminnet"
+#define TR_BL_ERASE_FLASH               "Radera flashminnet"
+#define TR_BL_ERASE_FLASH_MSG           "Detta kan ta upp till 200s"
+#define TR_BL_CURRENT_FW                "Nuvarande firmware:"
+
+#if defined(PCBNV14)
   #define TR_BL_SELECT_KEY              "[R TRIM] foer att vaelja fil"
   #define TR_BL_FLASH_KEY               "Tryck [R TRIM] foer att flasha"
   #define TR_BL_EXIT_KEY                " [L TRIM] för att avsluta"
   #define TR_BL_ENABLE                  "Aktivera"
   #define TR_BL_DISABLE                 "Inaktivera"
 #elif defined(PCBPL18)
-   // Bootloader PL18 specific - ASCII characters only
-  #define TR_BL_RF_USB_ACCESS         "RF USB access"
-  #define TR_BL_ERASE_INT_FLASH       "Radera interna flashminnet"
-  #define TR_BL_ERASE_FLASH           "Radera flashminnet"
-  #define TR_BL_ERASE_FLASH_MSG       "Detta kan ta upp till 200s"
-  #define TR_BL_SELECT_KEY            " Tryck [TR4 Ner] foer att vaelja fil"
-  #define TR_BL_FLASH_KEY             " Haall [TR4 Ner] foer att flasha"
-  #define TR_BL_ERASE_KEY             " Haall [TR4 Ner] foer att radera"
-  #define TR_BL_EXIT_KEY              " Tryck [TR4 Upp] foer att avbryta"
+  // Bootloader PL18/NB4+ specific - ASCII characters only
+  #define TR_BL_ENABLE                  "Aktivera"
+  #define TR_BL_DISABLE                 "Inaktivera"
+  #if defined(RADIO_NB4P)
+    #define TR_BL_SELECT_KEY          "[SW1A] för att vaelja fil"
+    #define TR_BL_FLASH_KEY           "Haall [SW1A] foer att flasha"
+    #define TR_BL_ERASE_KEY           "Haall [SW1A] foer att radera"
+    #define TR_BL_EXIT_KEY            "[SW1B] to exit"
+  #else
+    #define TR_BL_SELECT_KEY          "[TR4 Ner] för att vaelja fil"
+    #define TR_BL_FLASH_KEY           "Haall [TR4 Ner] foer att flasha"
+    #define TR_BL_ERASE_KEY           "Haall [TR4 Ner] foer att radera"
+    #define TR_BL_EXIT_KEY            "[TR4 Upp] foer att avbryta"
+  #endif
+#else
+  #define TR_BL_SELECT_KEY              "[ENT] för att vaelja fil"
+  #define TR_BL_FLASH_KEY               "Haall [ENT] foer att flasha"
+  #define TR_BL_ERASE_KEY               "Haall [ENT] foer att raderag"
+  #define TR_BL_EXIT_KEY                "[RTN] foer att avbryta"
 #endif
 
 // About screen

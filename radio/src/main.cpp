@@ -23,7 +23,10 @@
 #include "hal/storage.h"
 #include "hal/abnormal_reboot.h"
 #include "hal/usb_driver.h"
+#include "hal/audio_driver.h"
+
 #include "edgetx.h"
+#include "lua/lua_states.h"
 
 #if defined(LIBOPENUI)
 #include "libopenui.h"
@@ -203,54 +206,13 @@ void handleUsbConnection()
 #endif  // defined(STM32) && !defined(SIMU)
 }
 
-#if defined(PCBXLITES)
-uint8_t jackState = SPEAKER_ACTIVE;
-
-const char STR_JACK_HEADPHONE[] = "Headphone";
-const char STR_JACK_TRAINER[] = "Trainer";
-
-void onJackConnectMenu(const char* result)
-{
-  if (result == STR_JACK_HEADPHONE) {
-    jackState = HEADPHONE_ACTIVE;
-    disableSpeaker();
-    enableHeadphone();
-  } else if (result == STR_JACK_TRAINER) {
-    jackState = TRAINER_ACTIVE;
-    enableTrainer();
-  }
-}
-
-void handleJackConnection()
-{
-  if (jackState == SPEAKER_ACTIVE && isJackPlugged()) {
-    if (g_eeGeneral.jackMode == JACK_HEADPHONE_MODE) {
-      jackState = HEADPHONE_ACTIVE;
-      disableSpeaker();
-      enableHeadphone();
-    } else if (g_eeGeneral.jackMode == JACK_TRAINER_MODE) {
-      jackState = TRAINER_ACTIVE;
-      enableTrainer();
-    } else if (popupMenuItemsCount == 0) {
-      POPUP_MENU_START(onJackConnectMenu, 2, STR_JACK_HEADPHONE, STR_JACK_TRAINER);
-    }
-  } else if (jackState == SPEAKER_ACTIVE && !isJackPlugged() &&
-             popupMenuItemsCount > 0 && popupMenuHandler == onJackConnectMenu) {
-    popupMenuItemsCount = 0;
-  } else if (jackState != SPEAKER_ACTIVE && !isJackPlugged()) {
-    jackState = SPEAKER_ACTIVE;
-    enableSpeaker();
-  }
-}
-#endif
-
 void checkSpeakerVolume()
 {
 #if defined(AUDIO)
   if (currentSpeakerVolume != requiredSpeakerVolume) {
     currentSpeakerVolume = requiredSpeakerVolume;
 #if !defined(SOFTWARE_VOLUME)
-    setScaledVolume(currentSpeakerVolume);
+    audioSetVolume(currentSpeakerVolume);
 #endif
   }
 #endif
@@ -407,7 +369,7 @@ bool handleGui(event_t event)
 #if defined(LUA)
   bool isTelemView =
       menuHandlers[menuLevel] == menuViewTelemetry &&
-      TELEMETRY_SCREEN_TYPE(s_frsky_view) == TELEMETRY_SCREEN_TYPE_SCRIPT;
+      TELEMETRY_SCREEN_TYPE(selectedTelemView) == TELEMETRY_SCREEN_TYPE_SCRIPT;
   bool isStandalone = scriptInternalData[0].reference == SCRIPT_STANDALONE;
   if ((isTelemView || isStandalone) && event) {
     luaPushEvent(event);
@@ -525,7 +487,7 @@ void perMain()
 
   handleUsbConnection();
 
-#if defined(PCBXLITES)
+#if defined(SHARED_DSC_HEADPHONE_JACK)
   handleJackConnection();
 #endif
 
@@ -547,7 +509,13 @@ void perMain()
 
 #if defined(RTC_BACKUP_RAM)
   if (UNEXPECTED_SHUTDOWN()) {
+#if defined(COLORLCD)
     drawFatalErrorScreen(STR_EMERGENCY_MODE);
+#else
+    lcdClear();
+    menuMainView(0);
+    lcdRefresh();
+#endif
     return;
   }
 #endif

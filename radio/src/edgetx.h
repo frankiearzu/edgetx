@@ -451,12 +451,8 @@ enum FunctionsActive {
   FUNCTION_BACKGND_MUSIC_PAUSE,
   FUNCTION_BACKLIGHT,
   FUNCTION_RACING_MODE,
-#if defined(HARDWARE_TOUCH)
   FUNCTION_DISABLE_TOUCH,
-#endif
-#if defined(AUDIO_MUTE_GPIO)
   FUNCTION_DISABLE_AUDIO_AMP,
-#endif
 };
 
 #define VARIO_FREQUENCY_ZERO   700/*Hz*/
@@ -701,7 +697,23 @@ union ReusableBuffer
   PXX2HardwareAndSettings hardwareAndSettings; // radio_version
 #endif
 
+#if defined(NUM_BODY_LINES)
+  #define TOOL_NAME_MAX_LEN (LCD_W / FW)
+  #define TOOL_PATH_MAX_LEN (LEN_FILE_PATH_MAX + 10)
+  struct scriptInfo{
+      uint8_t index;
+      char label[TOOL_NAME_MAX_LEN + 1];
+      uint8_t module;
+      void (* tool)(event_t);
+      char path[TOOL_PATH_MAX_LEN + 1];
+  };
+#endif
+
   struct {
+#if defined(NUM_BODY_LINES)
+    scriptInfo script[NUM_BODY_LINES];
+    uint8_t oldOffset;
+#endif
 #if defined(PXX2)
     ModuleInformation modules[NUM_MODULES];
 #endif
@@ -778,12 +790,6 @@ union ReusableBuffer
     ModuleInformation internalModule;
 #endif
   } viewMain;
-
-#if !defined(SIMU)
-  // Data for the USB mass storage driver. If USB mass storage
-  // runs no menu is not allowed to be displayed
-  uint8_t MSC_BOT_Data[MASS_STORAGE_BUFFER_SIZE];
-#endif
 };
 
 extern ReusableBuffer reusableBuffer;
@@ -845,7 +851,7 @@ enum TelemetryViews {
   TELEMETRY_VIEW_MAX = TELEMETRY_CUSTOM_SCREEN_4
 };
 
-extern uint8_t s_frsky_view;
+extern uint8_t selectedTelemView;
 
 constexpr uint32_t EARTH_RADIUS = 6371009;
 

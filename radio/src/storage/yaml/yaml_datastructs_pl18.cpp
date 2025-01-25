@@ -363,7 +363,8 @@ static const struct YamlNode struct_RadioData[] = {
   YAML_UNSIGNED( "blOffBright", 7 ),
   YAML_STRING("bluetoothName", 10),
   YAML_STRING("ownerRegistrationID", 8),
-  YAML_PADDING( 3 ),
+  YAML_CUSTOM("rotEncDirection",r_rotEncDirection,nullptr),
+  YAML_UNSIGNED( "rotEncMode", 3 ),
   YAML_SIGNED( "uartSampleMode", 2 ),
   YAML_UNSIGNED( "stickDeadZone", 3 ),
   YAML_STRING("selectedTheme", 26),
@@ -627,6 +628,10 @@ static const struct YamlNode struct_anonymous_11[] = {
 };
 static const struct YamlNode struct_anonymous_12[] = {
   YAML_UNSIGNED( "telemetryBaudrate", 3 ),
+  YAML_UNSIGNED( "crsfArmingMode", 1 ),
+  YAML_PADDING( 4 ),
+  YAML_SIGNED_CUST( "crsfArmingTrigger", 10, r_swtchSrc, w_swtchSrc ),
+  YAML_SIGNED( "spare3", 6 ),
   YAML_END
 };
 static const struct YamlNode struct_anonymous_13[] = {
@@ -643,7 +648,7 @@ static const struct YamlNode union_anonymous_4_elmts[] = {
   YAML_STRUCT("flysky", 56, struct_anonymous_9, NULL),
   YAML_STRUCT("afhds3", 16, struct_anonymous_10, NULL),
   YAML_STRUCT("ghost", 8, struct_anonymous_11, NULL),
-  YAML_STRUCT("crsf", 8, struct_anonymous_12, NULL),
+  YAML_STRUCT("crsf", 24, struct_anonymous_12, NULL),
   YAML_STRUCT("dsmp", 8, struct_anonymous_13, NULL),
   YAML_END
 };
@@ -764,7 +769,7 @@ static const struct YamlNode union_ZoneOptionValue_elmts[] = {
   YAML_UNSIGNED( "unsignedValue", 32 ),
   YAML_SIGNED( "signedValue", 32 ),
   YAML_UNSIGNED( "boolValue", 32 ),
-  YAML_STRING("stringValue", 8),
+  YAML_STRING("stringValue", 12),
   YAML_CUSTOM("source",r_zov_source,w_zov_source),
   YAML_CUSTOM("color",r_zov_color,w_zov_color),
   YAML_END
@@ -772,33 +777,33 @@ static const struct YamlNode union_ZoneOptionValue_elmts[] = {
 static const struct YamlNode struct_ZoneOptionValueTyped[] = {
   YAML_IDX,
   YAML_ENUM("type", 32, enum_ZoneOptionValueEnum),
-  YAML_UNION("value", 64, union_ZoneOptionValue_elmts, select_zov),
+  YAML_UNION("value", 96, union_ZoneOptionValue_elmts, select_zov),
   YAML_END
 };
 static const struct YamlNode struct_WidgetPersistentData[] = {
-  YAML_ARRAY("options", 96, 10, struct_ZoneOptionValueTyped, NULL),
+  YAML_ARRAY("options", 128, 10, struct_ZoneOptionValueTyped, NULL),
   YAML_END
 };
 static const struct YamlNode struct_ZonePersistentData[] = {
   YAML_IDX,
   YAML_STRING("widgetName", 12),
-  YAML_STRUCT("widgetData", 960, struct_WidgetPersistentData, NULL),
+  YAML_STRUCT("widgetData", 1280, struct_WidgetPersistentData, NULL),
   YAML_END
 };
 static const struct YamlNode struct_LayoutPersistentData[] = {
-  YAML_ARRAY("zones", 1056, 10, struct_ZonePersistentData, NULL),
-  YAML_ARRAY("options", 96, 10, struct_ZoneOptionValueTyped, NULL),
+  YAML_ARRAY("zones", 1376, 10, struct_ZonePersistentData, NULL),
+  YAML_ARRAY("options", 128, 10, struct_ZoneOptionValueTyped, NULL),
   YAML_END
 };
 static const struct YamlNode struct_CustomScreenData[] = {
   YAML_IDX,
   YAML_STRING("LayoutId", 12),
-  YAML_STRUCT("layoutData", 11520, struct_LayoutPersistentData, NULL),
+  YAML_STRUCT("layoutData", 15040, struct_LayoutPersistentData, NULL),
   YAML_END
 };
 static const struct YamlNode struct_TopBarPersistentData[] = {
-  YAML_ARRAY("zones", 1056, 6, struct_ZonePersistentData, NULL),
-  YAML_ARRAY("options", 96, 1, struct_ZoneOptionValueTyped, NULL),
+  YAML_ARRAY("zones", 1376, 6, struct_ZonePersistentData, NULL),
+  YAML_ARRAY("options", 128, 1, struct_ZoneOptionValueTyped, NULL),
   YAML_END
 };
 static const struct YamlNode struct_USBJoystickChData[] = {
@@ -863,8 +868,8 @@ static const struct YamlNode struct_ModelData[] = {
   YAML_UNSIGNED( "potsWarnEnabled", 16 ),
   YAML_ARRAY("potsWarnPosition", 8, 16, struct_signed_8, NULL),
   YAML_ARRAY("telemetrySensors", 112, 60, struct_TelemetrySensor, NULL),
-  YAML_ARRAY("screenData", 11616, 10, struct_CustomScreenData, NULL),
-  YAML_STRUCT("topbarData", 6432, struct_TopBarPersistentData, NULL),
+  YAML_ARRAY("screenData", 15136, 10, struct_CustomScreenData, NULL),
+  YAML_STRUCT("topbarData", 8384, struct_TopBarPersistentData, NULL),
   YAML_ARRAY("topbarWidgetWidth", 8, 6, struct_unsigned_8, NULL),
   YAML_UNSIGNED( "view", 8 ),
   YAML_STRING("modelRegistrationID", 8),

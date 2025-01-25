@@ -39,12 +39,18 @@
 #elif defined(PCBNV14)
  #include "yaml_datastructs_nv14.cpp"
 #elif defined(PCBPL18)
- #include "yaml_datastructs_pl18.cpp"
+ #if defined(RADIO_NB4P)
+  #include "yaml_datastructs_nb4p.cpp"
+ #else
+  #include "yaml_datastructs_pl18.cpp"
+ #endif
 #elif defined(PCBX7)
- #if defined(RADIO_TPRO) || defined(RADIO_TPROV2)
+ #if defined(RADIO_TPRO) || defined(RADIO_TPROV2) || defined(RADIO_BUMBLEBEE)
   #include "yaml_datastructs_tpro.cpp"
  #elif defined(RADIO_FAMILY_T20)
   #include "yaml_datastructs_t20.cpp"
+ #elif defined(RADIO_GX12)
+   #include "yaml_datastructs_gx12.cpp"
  #elif defined(RADIO_COMMANDO8) || defined(RADIO_LR3PRO) || defined(RADIO_T8) || defined(RADIO_T12) || defined(RADIO_TLITE)
   #include "yaml_datastructs_xlite.cpp"
  #else

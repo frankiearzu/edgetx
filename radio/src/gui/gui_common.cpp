@@ -536,6 +536,11 @@ bool isSwitchAvailableInMixes(int swtch)
   return isSwitchAvailable(swtch, MixesContext);
 }
 
+bool isSwitchAvailableForArming(int swtch)
+{
+  return isSwitchAvailable(swtch, ModelCustomFunctionsContext);
+}
+
 #if defined(COLORLCD)
 bool isSwitch2POSWarningStateAvailable(int state)
 {
@@ -1093,6 +1098,18 @@ bool isTrainerModeAvailable(int mode)
        (!isModuleMultimodule(INTERNAL_MODULE) &&
         !isModuleMultimodule(EXTERNAL_MODULE)))
     return false;
+#endif
+  }
+
+  if (mode == TRAINER_MODE_CRSF) {
+
+#if !defined(CROSSFIRE)
+    return false;
+#else
+    if ((!IS_INTERNAL_MODULE_ENABLED() && !IS_EXTERNAL_MODULE_ENABLED()) ||
+         (!(isModuleELRS(INTERNAL_MODULE) && CRSF_ELRS_MIN_VER(INTERNAL_MODULE, 4, 0)) &&
+          !(isModuleELRS(EXTERNAL_MODULE) && CRSF_ELRS_MIN_VER(EXTERNAL_MODULE, 4, 0))))
+      return false;
 #endif
   }
 

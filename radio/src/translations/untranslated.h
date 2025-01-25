@@ -35,7 +35,7 @@
 #define TR_VTRAINERMODES                                                \
         TR_VTRAINER_MASTER_OFF, TR_VTRAINER_MASTER_JACK, TR_VTRAINER_SLAVE_JACK, \
         TR_VTRAINER_MASTER_SBUS_MODULE, TR_VTRAINER_MASTER_CPPM_MODULE, \
-        TR_VTRAINER_MASTER_BATTERY, TR_VTRAINER_BLUETOOTH, TR_VTRAINER_MULTI
+        TR_VTRAINER_MASTER_BATTERY, TR_VTRAINER_BLUETOOTH, TR_VTRAINER_MULTI, TR_VTRAINER_CRSF
 
 #if defined(PCBHORUS)
   #define TR_SM_VSRCRAW               "smA","smB","smC","smD","smE","smF",
@@ -86,7 +86,8 @@
 #define TR_R9M_FCC_POWER_VALUES        "10mW","100mW","500mW","1W (auto)"
 #define TR_R9M_LBT_POWER_VALUES        "25mW 8CH","25mW 16CH","200mW NoTele","500mW NoTele"
 
-#define TR_PPM_PROTOCOLS               TR("No Telem", "No Telemetry"),"MLink"
+#define TR_PPM_PROTOCOLS               TR("No Telem", "No Telemetry"),"MLink","SPort"
+#define TR_SBUS_PROTOCOLS              TR("No Telem", "No Telemetry"),"SPort"
 #define TR_DSM_PROTOCOLS               "LP45","DSM2","DSMX"
 
 #define TR_MULTI_PROTOCOLS             PROTO_NAMES

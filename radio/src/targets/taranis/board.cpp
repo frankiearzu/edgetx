@@ -30,6 +30,7 @@
 #include "hal/abnormal_reboot.h"
 #include "hal/usb_driver.h"
 #include "hal/gpio.h"
+#include "hal/rgbleds.h"
 
 #include "board.h"
 #include "boards/generic_stm32/module_ports.h"
@@ -198,12 +199,12 @@ void boardInit()
       delay_ms(20);
 #if defined(FUNCTION_SWITCHES)
       // Support for FS Led to indicate battery charge level
-      if (getBatteryVoltage() >= 660) fsLedOn(0);
-      if (getBatteryVoltage() >= 700) fsLedOn(1);
-      if (getBatteryVoltage() >= 740) fsLedOn(2);
-      if (getBatteryVoltage() >= 780) fsLedOn(3);
-      if (getBatteryVoltage() >= 820) fsLedOn(4);
-      if (getBatteryVoltage() >= 842) fsLedOn(5);
+      if (getBatteryVoltage() >= 660) setFSLedON(0);
+      if (getBatteryVoltage() >= 700) setFSLedON(1);
+      if (getBatteryVoltage() >= 740) setFSLedON(2);
+      if (getBatteryVoltage() >= 780) setFSLedON(3);
+      if (getBatteryVoltage() >= 820) setFSLedON(4);
+      if (getBatteryVoltage() >= 842) setFSLedON(5);
 #elif defined(STATUS_LEDS)
       // Use Status LED to indicate battery charge level instead
       if (getBatteryVoltage() <= 660) ledRed();         // low discharge
@@ -216,15 +217,15 @@ void boardInit()
   }
 #endif
 
+  delaysInit();
+  __enable_irq();
+
   keysInit();
   switchInit();
 
 #if defined(ROTARY_ENCODER_NAVIGATION)
   rotaryEncoderInit();
 #endif
-
-  delaysInit();
-  __enable_irq();
 
 #if defined(PWM_STICKS)
   sticksPwmDetect();
@@ -248,11 +249,6 @@ void boardInit()
     ws2812_set_color(i, 0, 0, 50);
   }
   ws2812_update(&_led_timer);
-#endif
-
-#if defined(DEBUG) && defined(AUX_SERIAL)
-  serialSetMode(SP_AUX1, UART_MODE_DEBUG);                // indicate AUX1 is used
-  serialInit(SP_AUX1, UART_MODE_DEBUG);                   // early AUX1 init
 #endif
 
 #if defined(HAPTIC)
@@ -283,15 +279,6 @@ void boardInit()
   usbChargerInit();
 #endif
 
-#if defined(JACK_DETECT_GPIO)
-  initJackDetect();
-#endif
-
-  initSpeakerEnable();
-  enableSpeaker();
-
-  initHeadphoneTrainerSwitch();
-
 #if defined(RTCLOCK)
   rtcInit(); // RTC must be initialized before rambackupRestore() is called
 #endif
@@ -301,6 +288,11 @@ void boardInit()
 #if defined(GUI)
   lcdSetContrast(true);
 #endif
+
+#if defined(RADIO_GX12)
+  gpio_init(HALL_SYNC, GPIO_OUT, GPIO_PIN_SPEED_LOW);
+#endif
+
 }
 #endif
 
@@ -355,65 +347,3 @@ void boardOff()
 
   // this function must not return!
 }
-
-#if defined(AUDIO_SPEAKER_ENABLE_GPIO)
-void initSpeakerEnable()
-{
-  gpio_init(AUDIO_SPEAKER_ENABLE_GPIO, GPIO_OUT, GPIO_PIN_SPEED_LOW);
-}
-
-void enableSpeaker()
-{
-  gpio_set(AUDIO_SPEAKER_ENABLE_GPIO);
-}
-
-void disableSpeaker()
-{
-  gpio_clear(AUDIO_SPEAKER_ENABLE_GPIO);
-}
-#endif
-
-#if defined(HEADPHONE_TRAINER_SWITCH_GPIO)
-void initHeadphoneTrainerSwitch()
-{
-  gpio_init(HEADPHONE_TRAINER_SWITCH_GPIO, GPIO_OUT, GPIO_PIN_SPEED_LOW);
-}
-
-void enableHeadphone()
-{
-  gpio_clear(HEADPHONE_TRAINER_SWITCH_GPIO);
-}
-
-void enableTrainer()
-{
-  gpio_set(HEADPHONE_TRAINER_SWITCH_GPIO);
-}
-#endif
-
-#if defined(JACK_DETECT_GPIO)
-void initJackDetect(void)
-{
-  gpio_init(JACK_DETECT_GPIO, GPIO_IN_PU, GPIO_PIN_SPEED_LOW);
-}
-
-bool isJackPlugged()
-{
-  // debounce
-  static bool debounced_state = 0;
-  static bool last_state = 0;
-
-  if (gpio_read(JACK_DETECT_GPIO)) {
-    if (!last_state) {
-      debounced_state = false;
-    }
-    last_state = false;
-  }
-  else {
-    if (last_state) {
-      debounced_state = true;
-    }
-    last_state = true;
-  }
-  return debounced_state;
-}
-#endif
