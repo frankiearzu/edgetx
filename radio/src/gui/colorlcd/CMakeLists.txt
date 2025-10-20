@@ -84,6 +84,8 @@ set(GUI_SRC
   module/module_setup.cpp
   module/ppm_settings.cpp
 
+  module/dsmp_settings.cpp
+
   radio/hw_extmodule.cpp
   radio/hw_inputs.cpp
   radio/hw_intmodule.cpp
