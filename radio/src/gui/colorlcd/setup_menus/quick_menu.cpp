@@ -25,7 +25,6 @@
 #include "edgetx.h"
 #include "quick_menu_group.h"
 #include "etx_lv_theme.h"
-#include "view_text.h"
 #include "view_main.h"
 #include "screen_setup.h"
 #include "theme_manager.h"
@@ -37,11 +36,7 @@ ButtonBase* QuickSubMenu::addButton()
 {
   menuButton = quickMenu->getTopMenu()->addButton(icon, title,
                       [=]() -> uint8_t {
-                        if (!subMenu) buildSubMenu();
-                        quickMenu->getTopMenu()->setCurrent(menuButton);
-                        quickMenu->getTopMenu()->setDisabled(false);
-                        quickMenu->getTopMenu()->clearFocus();
-                        enableSubMenu();
+                        activate();
                         return 0;
                       });
 
@@ -65,6 +60,13 @@ bool QuickSubMenu::isSubMenu(QuickMenu::SubMenu n)
 {
   for (int i = 0; items[i].icon < EDGETX_ICONS_COUNT; i += 1)
     if (items[i].subMenu == n) return true;
+  return false;
+}
+
+bool QuickSubMenu::isSubMenu(ButtonBase* b)
+{
+  for (int i = 0; items[i].icon < EDGETX_ICONS_COUNT; i += 1)
+    if (menuButton == b) return true;
   return false;
 }
 
@@ -96,6 +98,15 @@ void QuickSubMenu::setCurrent(QuickMenu::SubMenu n)
   quickMenu->getTopMenu()->setCurrent(menuButton);
   quickMenu->getTopMenu()->setDisabled(false);
   subMenu->setCurrent(getIndex(n));
+  enableSubMenu();
+}
+
+void QuickSubMenu::activate()
+{
+  if (!subMenu) buildSubMenu();
+  quickMenu->getTopMenu()->setCurrent(menuButton);
+  quickMenu->getTopMenu()->setDisabled(false);
+  quickMenu->getTopMenu()->clearFocus();
   enableSubMenu();
 }
 
@@ -233,16 +244,6 @@ QuickMenu::QuickMenu() :
   sub = new QuickSubMenu(box, this, ICON_RADIO_TOOLS, STR_QM_TOOLS, STR_QM_TOOLS, toolsMenuItems);
   sub->addButton();
   subMenus.emplace_back(sub);
-
-  mainMenu->addButton(ICON_MODEL_NOTES, STR_MAIN_MENU_MODEL_NOTES,
-                      [=]() -> uint8_t {
-                        onSelect(true);
-                        readModelNotes(true);
-                        return 0;
-                      },
-                      [=]() -> bool {
-                        return modelHasNotes();
-                      });
 }
 
 void QuickMenu::deleteLater(bool detach, bool trash)
@@ -276,7 +277,7 @@ void QuickMenu::openQM(std::function<void()> cancelHandler,
     setFocus(curPage);
   } else {
     pageGroup = nullptr;
-    if (curPage > QuickMenu::MANAGE_MODELS) {
+    if (curPage >= QuickMenu::FIRST_SUB_MENU_ITEM) {
       mainMenu->setDisabled(false);
       mainMenu->clearFocus();
       setFocus(curPage);
@@ -344,4 +345,31 @@ void QuickMenu::onLongPressMDL() { onSelect(true); new ModelLabelsWindow(); }
 void QuickMenu::onPressTELE() { subMenus[2]->onPress(ScreenSetupPage::FIRST_SCREEN_OFFSET); }
 void QuickMenu::onLongPressTELE() { onSelect(true); new ChannelsViewMenu(); }
 void QuickMenu::onLongPressRTN() { closeMenu(); }
+
+void QuickMenu::afterPG()
+{
+  auto b = mainMenu->getFocusedButton();
+  if (b) {
+    for(auto sub : subMenus) {
+      if (sub->isSubMenu(b)) {
+        sub->activate();
+        return;
+      }
+    }
+    focusMainMenu();
+    curPage = QuickMenu::NONE;
+  }
+}
+
+void QuickMenu::onPressPGDN()
+{
+  mainMenu->nextEntry();
+  afterPG();
+}
+
+void QuickMenu::onPressPGUP()
+{
+  mainMenu->prevEntry();
+  afterPG();
+}
 #endif

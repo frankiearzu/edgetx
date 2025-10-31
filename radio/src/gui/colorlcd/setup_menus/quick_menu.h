@@ -45,8 +45,9 @@ class QuickMenu : public NavWindow
   enum SubMenu {
     NONE = 0,
     MANAGE_MODELS,
+    FIRST_SUB_MENU_ITEM,
     // Model menu
-    MODEL_SETUP,
+    MODEL_SETUP = FIRST_SUB_MENU_ITEM,
     MODEL_HELI,
     MODEL_FLIGHTMODES,
     MODEL_INPUTS,
@@ -58,6 +59,7 @@ class QuickMenu : public NavWindow
     MODEL_SF,
     MODEL_SCRIPTS,
     MODEL_TELEMETRY,
+    MODEL_NOTES,
     // Radio menu
     RADIO_SETUP,
     RADIO_GF,
@@ -117,6 +119,9 @@ class QuickMenu : public NavWindow
   void onPressTELE() override;
   void onLongPressTELE() override;
   void onLongPressRTN() override;
+  void onPressPGDN() override;
+  void onPressPGUP() override;
+  void afterPG();
 #endif
 
   static constexpr int QM_MAIN_BTNS = 6;
@@ -164,12 +169,14 @@ class QuickSubMenu
   {}
 
   bool isSubMenu(QuickMenu::SubMenu n);
+  bool isSubMenu(ButtonBase* b);
   int getIndex(QuickMenu::SubMenu n);
 
   ButtonBase* addButton();
   void enableSubMenu();
   void setDisabled(bool all);
   void setCurrent(QuickMenu::SubMenu n);
+  void activate();
   void buildSubMenu();
   uint8_t onPress(int n);
   void onSelect(bool close);
