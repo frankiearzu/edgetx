@@ -594,7 +594,7 @@ uint8_t viewOptChoice(coord_t y, const char* title, uint8_t value, uint8_t attr,
 }
 
 #if defined(FUNCTION_SWITCHES)
-const char* _fct_sw_start[] = { STR_CHAR_UP, STR_CHAR_DOWN, "=" };
+const char* _fct_sw_start[] = { CHAR_UP, CHAR_DOWN, "=" };
 int swIndex;
 static uint8_t cfsGroup;
 
@@ -673,7 +673,7 @@ void menuCFSColor(coord_t y, RGBLedColor& color, const char* title, LcdFlags att
 
 static void menuModelCFSOne(event_t event)
 {
-  std::string s(STR_CHAR_SWITCH);
+  std::string s(CHAR_SWITCH);
   s += switchGetDefaultName(swIndex);
 
   int config = g_model.cfsType(swIndex);
@@ -723,6 +723,7 @@ static void menuModelCFSOne(event_t event)
             fsLedRGB(switchGetCustomSwitchIdx(swIndex), 0);
 #endif
           } else if (config == SWITCH_TOGGLE) {
+            setFSLogicalState(swIndex, 0);
             g_model.cfsSetStart(swIndex, FS_START_PREVIOUS);  // Toggle switches do not have startup position
           }
         }
@@ -1065,7 +1066,7 @@ void menuModelSetup(event_t event)
       {
         int index = (k - ITEM_MODEL_SETUP_SW1);
 
-        lcdDrawSizedText(INDENT_WIDTH, y, STR_CHAR_SWITCH, 2, attr);
+        lcdDrawSizedText(INDENT_WIDTH, y, CHAR_SWITCH, 2, attr);
         lcdDrawText(lcdNextPos, y, switchGetDefaultName(index), attr);
 
         if (attr && event == EVT_KEY_BREAK(KEY_ENTER)) {
