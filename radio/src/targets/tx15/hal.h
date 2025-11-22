@@ -232,16 +232,7 @@ TIM17:	ROTARY_ENCODER_TIMER
 
 #define ADC_DIRECTION {       	 \
     0,-1,0,-1,  /* gimbals */    \
-    -1,-1,   	/* pots */       \
-    0,0,     	/* sliders */    \
-    0,	     	/* vbat */       \
-    0,       	/* rtc_bat */    \
-    0,       	/* SWA */        \
-    0,       	/* SWB */        \
-    0,       	/* SWC */        \
-    0,       	/* SWD */        \
-    0,       	/* SWE */        \
-    0        	/* SWF */        \
+    -1,-1   	/* pots */       \
   }
 
 #define USE_EXTI9_5_IRQ // used for I2C port extender interrupt
@@ -401,8 +392,8 @@ TIM17:	ROTARY_ENCODER_TIMER
 #define LED_STRIP_REFRESH_PERIOD          50 //ms
 
 #define STATUS_LEDS
-#define GPIO_LED_GPIO_ON                  gpio_clear
-#define GPIO_LED_GPIO_OFF                 gpio_set
+#define GPIO_LED_GPIO_ON                  gpio_set
+#define GPIO_LED_GPIO_OFF                 gpio_clear
 #define LED_RED_GPIO                      GPIO_PIN(GPIOI, 8)   // PI.08
 #define LED_GREEN_GPIO                    GPIO_PIN(GPIOI, 11)  // PI.11
 #define LED_BLUE_GPIO                     GPIO_PIN(GPIOI, 10)  // PI.10
